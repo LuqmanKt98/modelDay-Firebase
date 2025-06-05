@@ -460,6 +460,13 @@ class _CalendarPageState extends State<CalendarPage> {
       title: 'Calendar',
       actions: [
         IconButton(
+          icon: const Icon(Icons.add, color: Colors.white),
+          onPressed: () {
+            Navigator.pushNamed(context, '/add-event');
+          },
+          tooltip: 'Add Event',
+        ),
+        IconButton(
           icon: Icon(
             _viewMode == 'month' ? Icons.view_agenda : Icons.calendar_month,
             color: Colors.white,
@@ -469,6 +476,7 @@ class _CalendarPageState extends State<CalendarPage> {
               _viewMode = _viewMode == 'month' ? 'agenda' : 'month';
             });
           },
+          tooltip: 'Toggle View',
         ),
       ],
       child: _isLoading

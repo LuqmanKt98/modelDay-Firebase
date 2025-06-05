@@ -125,11 +125,41 @@ class _AppLayoutState extends State<AppLayout> {
                         : null,
                   ),
                   child: SafeArea(
-                    child: Padding(
-                      padding: EdgeInsets.all(
-                        isDesktop ? 24.0 : (isTablet ? 20.0 : 16.0),
-                      ),
-                      child: widget.child,
+                    child: Column(
+                      children: [
+                        // Desktop header with title and actions
+                        if (isDesktop)
+                          Container(
+                            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  widget.title ?? 'ModelLog',
+                                  style: const TextStyle(
+                                    color: AppTheme.goldColor,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                if (widget.actions != null)
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: widget.actions!,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        // Main content
+                        Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.all(
+                              isDesktop ? 24.0 : (isTablet ? 20.0 : 16.0),
+                            ),
+                            child: widget.child,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

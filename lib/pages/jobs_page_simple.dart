@@ -238,6 +238,13 @@ class _JobsPageSimpleState extends State<JobsPageSimple> {
     return AppLayout(
       currentPage: 'Jobs',
       title: 'Jobs',
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.add),
+          onPressed: () => Navigator.pushNamed(context, '/new-job'),
+          tooltip: 'Add Job',
+        ),
+      ],
       child: Column(
         children: [
           // Search and controls
