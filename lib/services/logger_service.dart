@@ -10,7 +10,7 @@ class LoggerService {
       lineLength: 120,
       colors: true,
       printEmojis: true,
-      printTime: false,
+      dateTimeFormat: DateTimeFormat.none,
     ),
   );
 
