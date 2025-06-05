@@ -1,0 +1,70 @@
+/* Ensure proper viewport handling */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow-x: hidden;
+  font-size: 16px; /* Base font size for proper scaling */
+}
+
+/* Prevent zoom on mobile and ensure proper scaling */
+body {
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Flutter app container - ensure it takes full viewport */
+#flutter-view, flt-glass-pane {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+}
+
+/* Prevent horizontal scrolling and ensure proper box model */
+* {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+/* Fix Flutter web scaling issues */
+flt-scene-host {
+  pointer-events: auto !important;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 769px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+/* Mobile specific fixes */
+@media (max-width: 768px) {
+  body {
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Prevent zoom on input focus */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
