@@ -40,7 +40,7 @@ class _WelcomeGuideState extends State<WelcomeGuide>
       gradient: LinearGradient(
         colors: [Colors.green, Colors.teal],
       ),
-      action: '/profile',
+      action: '/profile?from_onboarding=true',
     ),
     const TourStep(
       title: "Track Your Jobs",
