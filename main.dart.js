@@ -126381,7 +126381,7 @@ B.abt=new A.lF("Customize Your Experience","Personalize your ModelLog experience
 B.abu=new A.lF("Welcome to ModelLog! \u2728","Let's get you started with managing your modeling career. Here's a quick tour of what you can do.",null,B.ue,null)
 B.TR=A.a(s([B.aE,B.nG]),t.d)
 B.SA=new A.fk(B.ct,B.cO,B.bh,B.TR,null,null)
-B.abv=new A.lF("Add a Profile Picture","Personalize your ModelLog experience by adding a profile picture. You can always update it later from your profile settings.",B.to,B.SA,"/profile")
+B.abv=new A.lF("Add a Profile Picture","Personalize your ModelLog experience by adding a profile picture. You can always update it later from your profile settings.",B.to,B.SA,"/profile?from_onboarding=true")
 B.TF=A.a(s([B.kv,B.cZ]),t.d)
 B.Sx=new A.fk(B.ct,B.cO,B.bh,B.TF,null,null)
 B.abw=new A.lF("Record Castings","Keep track of all your castings, callbacks, and their outcomes. Turn successful castings into jobs with one click and never miss an opportunity.",B.tG,B.Sx,"/castings")
