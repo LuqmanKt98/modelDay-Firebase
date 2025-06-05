@@ -58,6 +58,9 @@ dependencies:
   # New dependency
   table_calendar: ^3.0.9
 
+  # Logging framework
+  logger: ^2.0.2+1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

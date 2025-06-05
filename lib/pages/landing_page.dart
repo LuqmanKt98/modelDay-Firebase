@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:new_flutter/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:new_flutter/services/auth_service.dart';
+import 'package:new_flutter/services/logger_service.dart';
 import 'package:new_flutter/widgets/ui/button.dart';
 
 class LandingPage extends StatefulWidget {
@@ -205,9 +206,7 @@ class _LandingPageState extends State<LandingPage> {
                                       color: Colors.transparent,
                                       child: InkWell(
                                         onTap: () {
-                                          print('🔥 Sign Up button clicked!');
-                                          debugPrint(
-                                              'Navbar Sign Up button pressed');
+                                          LoggerService.info('🔥 Sign Up button clicked!');
                                           Navigator.pushNamed(
                                               context, '/signup');
                                         },
@@ -244,9 +243,7 @@ class _LandingPageState extends State<LandingPage> {
                                       color: Colors.transparent,
                                       child: InkWell(
                                         onTap: () {
-                                          print('🔥 Sign In button clicked!');
-                                          debugPrint(
-                                              'Navbar Sign In button pressed');
+                                          LoggerService.info('🔥 Sign In button clicked!');
                                           Navigator.pushNamed(
                                               context, '/signin');
                                         },
@@ -289,8 +286,7 @@ class _LandingPageState extends State<LandingPage> {
                                 color: Colors.transparent,
                                 child: InkWell(
                                   onTap: () {
-                                    print('🔥 Sign Up button clicked!');
-                                    debugPrint('Navbar Sign Up button pressed');
+                                    LoggerService.info('🔥 Sign Up button clicked!');
                                     Navigator.pushNamed(context, '/signup');
                                   },
                                   borderRadius: BorderRadius.circular(8),
@@ -336,8 +332,7 @@ class _LandingPageState extends State<LandingPage> {
                                 color: Colors.transparent,
                                 child: InkWell(
                                   onTap: () {
-                                    print('🔥 Sign In button clicked!');
-                                    debugPrint('Navbar Sign In button pressed');
+                                    LoggerService.info('🔥 Sign In button clicked!');
                                     Navigator.pushNamed(context, '/signin');
                                   },
                                   borderRadius: BorderRadius.circular(8),

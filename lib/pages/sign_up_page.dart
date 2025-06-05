@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:new_flutter/services/auth_service.dart';
+import 'package:new_flutter/services/logger_service.dart';
 import 'package:new_flutter/theme/app_theme.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -146,7 +147,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () {
-                      print('🔥 Back button clicked!');
+                      LoggerService.info('🔥 Back button clicked!');
                       Navigator.pop(context);
                     },
                     style: IconButton.styleFrom(

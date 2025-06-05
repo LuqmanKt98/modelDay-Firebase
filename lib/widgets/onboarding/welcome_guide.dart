@@ -23,81 +23,81 @@ class _WelcomeGuideState extends State<WelcomeGuide>
   late Animation<double> _fadeAnimation;
 
   final List<TourStep> _steps = [
-    TourStep(
+    const TourStep(
       title: "Welcome to ModelLog! ✨",
       description:
           "Let's get you started with managing your modeling career. Here's a quick tour of what you can do.",
       icon: null,
-      gradient: const LinearGradient(
+      gradient: LinearGradient(
         colors: [Color(0xFFCDAA7D), Color(0xFFB8976C)],
       ),
     ),
-    TourStep(
+    const TourStep(
       title: "Add a Profile Picture",
       description:
           "Personalize your ModelLog experience by adding a profile picture. You can always update it later from your profile settings.",
       icon: Icons.account_circle,
-      gradient: const LinearGradient(
+      gradient: LinearGradient(
         colors: [Colors.green, Colors.teal],
       ),
       action: '/profile',
     ),
-    TourStep(
+    const TourStep(
       title: "Track Your Jobs",
       description:
           "Log all your modeling jobs, from fashion shows to commercial shoots. Keep track of rates, dates, client details, and earnings in one place.",
       icon: Icons.work,
-      gradient: const LinearGradient(
+      gradient: LinearGradient(
         colors: [Colors.blue, Colors.indigo],
       ),
       action: '/jobs',
     ),
-    TourStep(
+    const TourStep(
       title: "Record Castings",
       description:
           "Keep track of all your castings, callbacks, and their outcomes. Turn successful castings into jobs with one click and never miss an opportunity.",
       icon: Icons.videocam,
-      gradient: const LinearGradient(
+      gradient: LinearGradient(
         colors: [Colors.indigo, Colors.purple],
       ),
       action: '/castings',
     ),
-    TourStep(
+    const TourStep(
       title: "Photo Shoots & Tests",
       description:
           "Manage your test shoots, polaroids, and professional photo sessions. Store all the important details and build your portfolio.",
       icon: Icons.camera_alt,
-      gradient: const LinearGradient(
+      gradient: LinearGradient(
         colors: [Colors.pink, Colors.red],
       ),
       action: '/shootings',
     ),
-    TourStep(
+    const TourStep(
       title: "Network & Contacts",
       description:
           "Build your professional network. Keep track of agencies, agents, and industry contacts all in one place. Grow your modeling career connections.",
       icon: Icons.people,
-      gradient: const LinearGradient(
+      gradient: LinearGradient(
         colors: [Colors.orange, Colors.deepOrange],
       ),
       action: '/agents',
     ),
-    TourStep(
+    const TourStep(
       title: "AI-Powered Features",
       description:
           "Use our AI assistant to help you find jobs, prepare for castings, get career advice, and optimize your modeling portfolio with personalized recommendations.",
       icon: Icons.auto_awesome,
-      gradient: const LinearGradient(
+      gradient: LinearGradient(
         colors: [Colors.purple, Colors.deepPurple],
       ),
       action: '/ai-chat',
     ),
-    TourStep(
+    const TourStep(
       title: "Customize Your Experience",
       description:
           "Personalize your ModelLog experience in settings. Add the app to your home screen for quick access and configure your preferences.",
       icon: Icons.settings,
-      gradient: const LinearGradient(
+      gradient: LinearGradient(
         colors: [Colors.blue, Colors.blueAccent],
       ),
       action: '/settings',
@@ -281,9 +281,9 @@ class _WelcomeGuideState extends State<WelcomeGuide>
           Container(
             width: 80,
             height: 80,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 colors: [AppTheme.goldColor, Color(0xFFB8976C)],
               ),
             ),

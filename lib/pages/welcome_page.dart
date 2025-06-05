@@ -469,7 +469,7 @@ class _WelcomePageState extends State<WelcomePage> {
               ),
             ),
             const SizedBox(width: 12),
-            Text(
+            const Text(
               'Recent Activity',
               style: TextStyle(
                 fontSize: 24,
