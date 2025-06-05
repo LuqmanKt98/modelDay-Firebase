@@ -93,7 +93,11 @@ class _ProfilePageState extends State<ProfilePage> {
         await authService.updateOnboardingCompleted(true);
 
         if (mounted) {
-          setState(() => _isLoading = false);
+          setState(() {
+            _isLoading = false;
+            _isEditing = false; // Exit edit mode
+            _fromOnboarding = false; // No longer from onboarding
+          });
 
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -102,11 +106,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           );
 
-          // Navigate to welcome page after a short delay
-          await Future.delayed(const Duration(milliseconds: 1500));
-          if (mounted) {
-            Navigator.pushReplacementNamed(context, '/welcome');
-          }
+          // Stay on profile page - don't navigate away
         }
       } else {
         if (mounted) {
