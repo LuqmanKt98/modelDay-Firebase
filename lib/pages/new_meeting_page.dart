@@ -106,8 +106,7 @@ class _NewMeetingPageState extends State<NewMeetingPage> {
     });
 
     try {
-      final service = MeetingsService();
-      final meeting = await service.getMeetingById(id);
+      final meeting = await MeetingsService.getMeetingById(id);
       if (meeting != null) {
         setState(() {
           _meetingNameController.text = meeting.clientName;
@@ -234,7 +233,6 @@ class _NewMeetingPageState extends State<NewMeetingPage> {
     });
 
     try {
-      final service = MeetingsService();
       final meeting = Meeting(
         id: _editingId,
         clientName: _meetingNameController.text,
@@ -248,9 +246,9 @@ class _NewMeetingPageState extends State<NewMeetingPage> {
       );
 
       if (_isEditing && _editingId != null) {
-        await service.updateMeeting(_editingId!, meeting);
+        await MeetingsService.updateMeeting(_editingId!, meeting.toJson());
       } else {
-        await service.createMeeting(meeting);
+        await MeetingsService.createMeeting(meeting.toJson());
       }
 
       if (mounted) {

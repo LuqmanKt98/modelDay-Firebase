@@ -56,17 +56,25 @@ class _ProfilePageState extends State<ProfilePage> {
     super.dispose();
   }
 
-  void _loadUserData() {
-    final user = context.read<AuthService>().currentUser;
+  void _loadUserData() async {
+    final authService = context.read<AuthService>();
+    final user = authService.currentUser;
     if (user != null) {
       _emailController.text = user.email ?? '';
-      _fullNameController.text = user.userMetadata?['full_name'] ?? '';
-      _phoneController.text = user.phone ?? '';
-      // Load other fields from user metadata if available
-      _bioController.text = user.userMetadata?['bio'] ?? '';
-      _locationController.text = user.userMetadata?['location'] ?? '';
-      _websiteController.text = user.userMetadata?['website'] ?? '';
-      _instagramController.text = user.userMetadata?['instagram'] ?? '';
+      _fullNameController.text = user.displayName ?? '';
+
+      // Load additional user data from Firestore
+      try {
+        final userData = await authService.getUserData();
+        if (userData != null) {
+          _bioController.text = userData['bio'] ?? '';
+          _locationController.text = userData['location'] ?? '';
+          _websiteController.text = userData['website'] ?? '';
+          _instagramController.text = userData['instagram'] ?? '';
+        }
+      } catch (e) {
+        debugPrint('Error loading user data: $e');
+      }
     }
   }
 
@@ -79,9 +87,8 @@ class _ProfilePageState extends State<ProfilePage> {
       final authService = context.read<AuthService>();
 
       // Update user profile data
-      await authService.updateUserProfile({
+      await authService.updateUserData({
         'full_name': _fullNameController.text.trim(),
-        'phone': _phoneController.text.trim(),
         'bio': _bioController.text.trim(),
         'location': _locationController.text.trim(),
         'website': _websiteController.text.trim(),

@@ -1,6 +1,7 @@
-import 'dart:convert';
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:new_flutter/models/event.dart';
 import 'package:new_flutter/models/job.dart';
@@ -274,14 +275,7 @@ class ExportService {
   static Future<void> _shareFile(String content, String filename) async {
     if (Platform.isAndroid || Platform.isIOS) {
       // Mobile: Use share_plus
-      final bytes = utf8.encode(content);
-      await Share.shareXFiles([
-        XFile.fromData(
-          bytes,
-          name: filename,
-          mimeType: 'text/csv',
-        )
-      ]);
+      await SharePlus.instance.share(ShareParams(text: content));
     } else {
       // Desktop: Save to downloads folder
       final directory = await getDownloadsDirectory();
@@ -295,9 +289,43 @@ class ExportService {
 
   // Download file on web
   static Future<void> _downloadWebFile(String content, String filename) async {
-    // For web, we would need to use dart:html or a web-specific package
-    // This is a placeholder implementation
-    debugPrint('Web download not implemented yet');
-    // TODO: Implement web download using dart:html or url_launcher
+    try {
+      // Create data URL with CSV content
+      final bytes = utf8.encode(content);
+      final base64Data = base64Encode(bytes);
+      final dataUrl = 'data:text/csv;charset=utf-8;base64,$base64Data';
+
+      // Create download URL
+      final downloadUrl = Uri.parse(dataUrl);
+
+      if (await canLaunchUrl(downloadUrl)) {
+        await launchUrl(
+          downloadUrl,
+          mode: LaunchMode.platformDefault,
+        );
+        debugPrint('Web download initiated for: $filename');
+      } else {
+        debugPrint('Could not launch download URL for web');
+
+        // Fallback: Try to open in new tab
+        await launchUrl(
+          downloadUrl,
+          mode: LaunchMode.externalApplication,
+        );
+      }
+    } catch (e) {
+      debugPrint('Web download error: $e');
+      // Additional fallback: show content in new tab
+      try {
+        final contentUrl = Uri.dataFromString(
+          content,
+          mimeType: 'text/csv',
+          encoding: utf8,
+        );
+        await launchUrl(contentUrl, mode: LaunchMode.externalApplication);
+      } catch (fallbackError) {
+        debugPrint('Fallback web download also failed: $fallbackError');
+      }
+    }
   }
 }

@@ -105,8 +105,7 @@ class _NewPolaroidPageState extends State<NewPolaroidPage> {
     });
 
     try {
-      final service = PolaroidsService();
-      final polaroid = await service.getPolaroidById(id);
+      final polaroid = await PolaroidsService.getPolaroidById(id);
       if (polaroid != null) {
         setState(() {
           _clientNameController.text = polaroid.clientName;
@@ -233,7 +232,6 @@ class _NewPolaroidPageState extends State<NewPolaroidPage> {
     });
 
     try {
-      final service = PolaroidsService();
       final polaroid = Polaroid(
         id: _editingId,
         clientName: _clientNameController.text,
@@ -247,9 +245,9 @@ class _NewPolaroidPageState extends State<NewPolaroidPage> {
       );
 
       if (_isEditing && _editingId != null) {
-        await service.updatePolaroid(_editingId!, polaroid);
+        await PolaroidsService.updatePolaroid(_editingId!, polaroid.toJson());
       } else {
-        await service.createPolaroid(polaroid);
+        await PolaroidsService.createPolaroid(polaroid.toJson());
       }
 
       if (mounted) {

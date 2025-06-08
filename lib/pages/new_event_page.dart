@@ -244,7 +244,7 @@ class _NewEventPageState extends State<NewEventPage> {
         additionalData: eventData,
       );
 
-      final createdEvent = await EventsService().createEvent(event);
+      final createdEvent = await EventsService().createEvent(event.toJson());
 
       if (createdEvent != null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

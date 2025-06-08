@@ -116,8 +116,7 @@ class _NewShootingPageState extends State<NewShootingPage> {
     });
 
     try {
-      final service = ShootingsService();
-      final shooting = await service.getShootingById(id);
+      final shooting = await ShootingsService.getShootingById(id);
       if (shooting != null) {
         setState(() {
           _clientNameController.text = shooting.clientName;
@@ -238,7 +237,6 @@ class _NewShootingPageState extends State<NewShootingPage> {
     });
 
     try {
-      final service = ShootingsService();
       final shooting = Shooting(
         id: _editingId,
         clientName: _clientNameController.text,
@@ -254,9 +252,9 @@ class _NewShootingPageState extends State<NewShootingPage> {
       );
 
       if (_isEditing && _editingId != null) {
-        await service.updateShooting(_editingId!, shooting);
+        await ShootingsService.updateShooting(_editingId!, shooting.toJson());
       } else {
-        await service.createShooting(shooting);
+        await ShootingsService.createShooting(shooting.toJson());
       }
 
       if (mounted) {

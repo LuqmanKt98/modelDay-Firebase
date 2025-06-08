@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'auth_service.dart';
 import 'token_storage_service.dart';
 
 class ApiClient {
-  static final _supabase = Supabase.instance.client;
   static AuthService? _authService;
 
   /// Initialize with auth service reference
@@ -12,289 +12,173 @@ class ApiClient {
     _authService = authService;
   }
 
-  /// Make authenticated HTTP request with automatic token management
-  static Future<Map<String, dynamic>?> request({
+  /// Make HTTP request to Firebase/Firestore
+  static Future<dynamic> request({
     required String method,
     required String endpoint,
     Map<String, dynamic>? data,
     Map<String, String>? headers,
-    bool requireAuth = true,
   }) async {
     try {
-      // Prepare headers
-      final requestHeaders = <String, String>{
-        'Content-Type': 'application/json',
-        ...?headers,
-      };
+      debugPrint('Firebase API Request: $method $endpoint');
 
-      // Add authentication if required
-      if (requireAuth) {
-        final token = await _getValidToken();
-        if (token != null) {
-          requestHeaders['Authorization'] = 'Bearer $token';
-        } else if (requireAuth) {
-          throw Exception(
-              'Authentication required but no valid token available');
-        }
-      }
-
-      // Make the request based on method
-      dynamic response;
-
-      switch (method.toUpperCase()) {
-        case 'GET':
-          response = await _supabase
-              .from(endpoint)
-              .select()
-              .withConverter((data) => data);
-          break;
-
-        case 'POST':
-          if (data != null) {
-            response =
-                await _supabase.from(endpoint).insert(data).select().single();
-          }
-          break;
-
-        case 'PUT':
-        case 'PATCH':
-          if (data != null && data.containsKey('id')) {
-            response = await _supabase
-                .from(endpoint)
-                .update(data)
-                .eq('id', data['id'])
-                .select()
-                .single();
-          }
-          break;
-
-        case 'DELETE':
-          if (data != null && data.containsKey('id')) {
-            await _supabase.from(endpoint).delete().eq('id', data['id']);
-            response = {'success': true};
-          }
-          break;
-
-        default:
-          throw Exception('Unsupported HTTP method: $method');
-      }
-
-      return response is Map<String, dynamic> ? response : {'data': response};
+      // For now, return a placeholder response
+      // This will be implemented with proper Firestore operations
+      return {'message': 'Firebase API placeholder - implement specific operations'};
     } catch (e) {
       debugPrint('API request error: $e');
-
-      // Handle authentication errors
-      if (e.toString().contains('401') ||
-          e.toString().contains('unauthorized')) {
-        await _handleAuthError();
-      }
-
       rethrow;
     }
   }
 
-  /// Get a valid access token, refreshing if necessary
-  static Future<String?> _getValidToken() async {
+  /// Get access token (Firebase ID token)
+  static Future<String?> getAccessToken() async {
     try {
-      // Check if current session is valid
-      if (_authService != null) {
-        final isValid = await _authService!.isSessionValid();
-        if (isValid) {
-          return await _authService!.getAccessToken();
-        }
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        return await user.getIdToken();
       }
-
-      // Try to refresh token
-      final refreshToken = await TokenStorageService.getRefreshToken();
-      if (refreshToken != null && _authService != null) {
-        final refreshed = await _authService!.refreshToken();
-        if (refreshed) {
-          return await _authService!.getAccessToken();
-        }
-      }
-
       return null;
     } catch (e) {
-      debugPrint('Error getting valid token: $e');
+      debugPrint('Error getting access token: $e');
       return null;
     }
   }
 
   /// Handle authentication errors
-  static Future<void> _handleAuthError() async {
+  static Future<void> handleAuthError(dynamic error) async {
     try {
-      debugPrint('Handling authentication error - clearing tokens');
+      debugPrint('Handling auth error: $error');
 
       // Clear stored tokens
       await TokenStorageService.clearAll();
 
       // Force logout through auth service
       if (_authService != null) {
-        await _authService!.forceLogout();
+        await _authService!.signOut();
       }
     } catch (e) {
       debugPrint('Error handling auth error: $e');
     }
   }
 
-  /// Convenience methods for common HTTP operations
-
-  static Future<Map<String, dynamic>?> get(
-    String endpoint, {
-    Map<String, String>? headers,
-    bool requireAuth = true,
-  }) async {
-    return request(
-      method: 'GET',
-      endpoint: endpoint,
-      headers: headers,
-      requireAuth: requireAuth,
-    );
-  }
-
-  static Future<Map<String, dynamic>?> post(
-    String endpoint,
-    Map<String, dynamic> data, {
-    Map<String, String>? headers,
-    bool requireAuth = true,
-  }) async {
-    return request(
-      method: 'POST',
-      endpoint: endpoint,
-      data: data,
-      headers: headers,
-      requireAuth: requireAuth,
-    );
-  }
-
-  static Future<Map<String, dynamic>?> put(
-    String endpoint,
-    Map<String, dynamic> data, {
-    Map<String, String>? headers,
-    bool requireAuth = true,
-  }) async {
-    return request(
-      method: 'PUT',
-      endpoint: endpoint,
-      data: data,
-      headers: headers,
-      requireAuth: requireAuth,
-    );
-  }
-
-  static Future<Map<String, dynamic>?> patch(
-    String endpoint,
-    Map<String, dynamic> data, {
-    Map<String, String>? headers,
-    bool requireAuth = true,
-  }) async {
-    return request(
-      method: 'PATCH',
-      endpoint: endpoint,
-      data: data,
-      headers: headers,
-      requireAuth: requireAuth,
-    );
-  }
-
-  static Future<Map<String, dynamic>?> delete(
-    String endpoint,
-    String id, {
-    Map<String, String>? headers,
-    bool requireAuth = true,
-  }) async {
-    return request(
-      method: 'DELETE',
-      endpoint: endpoint,
-      data: {'id': id},
-      headers: headers,
-      requireAuth: requireAuth,
-    );
-  }
-
-  /// Upload file with authentication
+  /// Upload file to Firebase Storage
   static Future<String?> uploadFile({
+    required List<int> fileBytes,
+    required String fileName,
     required String bucket,
-    required String path,
-    required Uint8List fileBytes,
-    String? contentType,
+    String? path,
   }) async {
     try {
-      final token = await _getValidToken();
-      if (token == null) {
-        throw Exception('Authentication required for file upload');
+      if (!isAuthenticated()) {
+        throw Exception('User not authenticated');
       }
 
-      final response =
-          await _supabase.storage.from(bucket).uploadBinary(path, fileBytes);
+      final storage = FirebaseStorage.instance;
+      final userId = getCurrentUserId();
+      final filePath = path ?? 'uploads/$userId/$fileName';
 
-      if (response.isNotEmpty) {
-        return _supabase.storage.from(bucket).getPublicUrl(path);
-      }
+      debugPrint('Uploading file to Firebase Storage: $filePath');
 
-      return null;
+      final ref = storage.ref().child(filePath);
+      final uploadTask = ref.putData(Uint8List.fromList(fileBytes));
+
+      final snapshot = await uploadTask;
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+
+      debugPrint('File uploaded successfully: $downloadUrl');
+      return downloadUrl;
     } catch (e) {
       debugPrint('File upload error: $e');
-
-      if (e.toString().contains('401') ||
-          e.toString().contains('unauthorized')) {
-        await _handleAuthError();
-      }
-
-      rethrow;
+      return null;
     }
   }
 
-  /// Download file with authentication
+  /// Download file from Firebase Storage
   static Future<Uint8List?> downloadFile({
     required String bucket,
     required String path,
   }) async {
     try {
-      final token = await _getValidToken();
-      if (token == null) {
-        throw Exception('Authentication required for file download');
+      if (!isAuthenticated()) {
+        throw Exception('User not authenticated');
       }
 
-      final response = await _supabase.storage.from(bucket).download(path);
+      final storage = FirebaseStorage.instance;
+      debugPrint('Downloading file from Firebase Storage: $path');
 
-      return response;
+      final ref = storage.ref().child(path);
+      final data = await ref.getData();
+
+      debugPrint('File downloaded successfully: ${data?.length} bytes');
+      return data;
     } catch (e) {
       debugPrint('File download error: $e');
-
-      if (e.toString().contains('401') ||
-          e.toString().contains('unauthorized')) {
-        await _handleAuthError();
-      }
-
-      rethrow;
+      return null;
     }
   }
 
-  /// Get public URL for file
-  static String getPublicUrl({
+  /// Get public URL for file from Firebase Storage
+  static Future<String?> getPublicUrl({
     required String bucket,
     required String path,
-  }) {
-    return _supabase.storage.from(bucket).getPublicUrl(path);
+  }) async {
+    try {
+      final storage = FirebaseStorage.instance;
+      final ref = storage.ref().child(path);
+      final downloadUrl = await ref.getDownloadURL();
+
+      debugPrint('Generated public URL for: $path');
+      return downloadUrl;
+    } catch (e) {
+      debugPrint('Error getting public URL: $e');
+      return null;
+    }
   }
 
   /// Check if user is authenticated
-  static Future<bool> isAuthenticated() async {
-    final token = await _getValidToken();
-    return token != null;
+  static bool isAuthenticated() {
+    return FirebaseAuth.instance.currentUser != null;
   }
 
-  /// Get current user data
-  static Future<Map<String, dynamic>?> getCurrentUser() async {
-    try {
-      final isAuth = await isAuthenticated();
-      if (!isAuth) return null;
+  /// Get current user ID
+  static String? getCurrentUserId() {
+    return FirebaseAuth.instance.currentUser?.uid;
+  }
 
-      return await TokenStorageService.getUserData();
+  /// Get current user email
+  static String? getCurrentUserEmail() {
+    return FirebaseAuth.instance.currentUser?.email;
+  }
+
+  /// Refresh authentication token
+  static Future<bool> refreshToken() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await user.getIdToken(true); // Force refresh
+        return true;
+      }
+      return false;
     } catch (e) {
-      debugPrint('Error getting current user: $e');
-      return null;
+      debugPrint('Error refreshing token: $e');
+      return false;
+    }
+  }
+
+  /// Check if session is valid
+  static Future<bool> isSessionValid() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        // Try to get a fresh token
+        await user.getIdToken(true);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Session validation error: $e');
+      return false;
     }
   }
 }

@@ -347,7 +347,7 @@ class _CalendarPageState extends State<CalendarPage> {
                       const SizedBox(height: 16),
                       ..._getEventsForDay(
                         _selectedDay!,
-                      ).map((event) => _buildEventCard(event)).toList(),
+                      ).map((event) => _buildEventCard(event)),
                       if (_getEventsForDay(_selectedDay!).isEmpty)
                         Center(
                           child: Column(

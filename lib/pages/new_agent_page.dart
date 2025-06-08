@@ -116,7 +116,7 @@ class _NewAgentPageState extends State<NewAgentPage> {
       if (_isEditing && _editingId != null) {
         await _agentsService.updateAgent(_editingId!, agent);
       } else {
-        await _agentsService.createAgent(agent);
+        await _agentsService.createAgent(agent.toJson());
       }
 
       if (mounted) {

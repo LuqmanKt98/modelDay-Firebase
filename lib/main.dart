@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'package:new_flutter/pages/landing_page.dart';
 import 'package:new_flutter/pages/sign_in_page.dart';
 import 'package:new_flutter/pages/sign_up_page.dart';
@@ -20,6 +21,7 @@ import 'package:new_flutter/pages/meetings_page.dart';
 import 'package:new_flutter/pages/ai_jobs_page.dart';
 import 'package:new_flutter/pages/ai_chat_page.dart';
 import 'package:new_flutter/pages/agencies_page.dart';
+import 'package:new_flutter/pages/firebase_test_page.dart';
 import 'package:new_flutter/pages/agents_page.dart';
 import 'package:new_flutter/pages/industry_contacts_page.dart';
 import 'package:new_flutter/pages/job_gallery_page.dart';
@@ -30,7 +32,7 @@ import 'package:new_flutter/pages/new_ai_job_page.dart';
 import 'package:new_flutter/pages/new_job_gallery_page.dart';
 import 'package:new_flutter/pages/forgot_password_page.dart';
 import 'package:new_flutter/pages/register_page.dart';
-import 'package:new_flutter/pages/supabase_test_page.dart';
+
 import 'package:new_flutter/pages/edit_direct_booking_page.dart';
 import 'package:new_flutter/pages/auth_callback_page.dart';
 import 'package:new_flutter/pages/add_event_page.dart';
@@ -47,10 +49,8 @@ import 'package:new_flutter/theme/app_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Supabase.initialize(
-    url: 'https://nvawwmygojhhvimvjiif.supabase.co',
-    anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im52YXd3bXlnb2poaHZpbXZqaWlmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0MzIyMDksImV4cCI6MjA2MTAwODIwOX0.tlTfrUuwdbspyoE6uptKupTCYNuIp3lZMLfGNL3aT7I',
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
   );
 
   runApp(const MyApp());
@@ -132,13 +132,14 @@ class MyApp extends StatelessWidget {
           '/new-job-gallery': (context) => const NewJobGalleryPage(),
           '/forgot-password': (context) => const ForgotPasswordPage(),
           '/register': (context) => const RegisterPage(),
-          '/supabase-test': (context) => const SupabaseTestPage(),
+
           '/edit-direct-booking': (context) => const EditDirectBookingPage(),
           '/auth/callback': (context) => const AuthCallbackPage(),
           '/add-event': (context) => const AddEventPage(),
           '/new-agency': (context) => const NewAgencyPage(),
           '/new-agent': (context) => const NewAgentPage(),
           '/new-industry-contact': (context) => const NewIndustryContactPage(),
+          '/firebase-test': (context) => const FirebaseTestPage(),
         },
       ),
     );

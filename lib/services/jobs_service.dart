@@ -1,25 +1,14 @@
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/job.dart';
+import 'firebase_service_template.dart';
 
 class JobsService {
-  static final _supabase = Supabase.instance.client;
+  static const String _collectionName = 'jobs';
 
   static Future<List<Job>> list() async {
     try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) {
-        debugPrint('No authenticated user found');
-        return [];
-      }
-
-      final response = await _supabase
-          .from('Job')
-          .select()
-          .eq('created_by', user.id)
-          .order('date', ascending: false);
-
-      return response.map<Job>((json) => Job.fromJson(json)).toList();
+      final documents = await FirebaseServiceTemplate.getUserDocuments(_collectionName);
+      return documents.map<Job>((doc) => Job.fromJson(doc)).toList();
     } catch (e) {
       debugPrint('Error fetching jobs: $e');
       return [];
@@ -28,20 +17,11 @@ class JobsService {
 
   static Future<Job?> get(String id) async {
     try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) {
-        debugPrint('No authenticated user found');
-        return null;
+      final doc = await FirebaseServiceTemplate.getDocument(_collectionName, id);
+      if (doc != null) {
+        return Job.fromJson(doc);
       }
-
-      final response = await _supabase
-          .from('Job')
-          .select()
-          .eq('id', id)
-          .eq('created_by', user.id)
-          .single();
-
-      return Job.fromJson(response);
+      return null;
     } catch (e) {
       debugPrint('Error fetching job: $e');
       return null;
@@ -50,24 +30,11 @@ class JobsService {
 
   static Future<Job?> create(Map<String, dynamic> data) async {
     try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) {
-        debugPrint('No authenticated user found');
-        return null;
+      final docId = await FirebaseServiceTemplate.createDocument(_collectionName, data);
+      if (docId != null) {
+        return await get(docId);
       }
-
-      // Add user ID and timestamps
-      final enrichedData = {
-        ...data,
-        'created_by': user.id,
-        'created_date': DateTime.now().toIso8601String(),
-        'updated_date': DateTime.now().toIso8601String(),
-      };
-
-      final response =
-          await _supabase.from('Job').insert(enrichedData).select().single();
-
-      return Job.fromJson(response);
+      return null;
     } catch (e) {
       debugPrint('Error creating job: $e');
       return null;
@@ -76,27 +43,11 @@ class JobsService {
 
   static Future<Job?> update(String id, Map<String, dynamic> data) async {
     try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) {
-        debugPrint('No authenticated user found');
-        return null;
+      final success = await FirebaseServiceTemplate.updateDocument(_collectionName, id, data);
+      if (success) {
+        return await get(id);
       }
-
-      // Add updated timestamp
-      final enrichedData = {
-        ...data,
-        'updated_date': DateTime.now().toIso8601String(),
-      };
-
-      final response = await _supabase
-          .from('Job')
-          .update(enrichedData)
-          .eq('id', id)
-          .eq('created_by', user.id)
-          .select()
-          .single();
-
-      return Job.fromJson(response);
+      return null;
     } catch (e) {
       debugPrint('Error updating job: $e');
       return null;
@@ -105,31 +56,48 @@ class JobsService {
 
   static Future<bool> delete(String id) async {
     try {
-      final user = _supabase.auth.currentUser;
-      if (user == null) {
-        debugPrint('No authenticated user found');
-        return false;
-      }
-
-      await _supabase
-          .from('Job')
-          .delete()
-          .eq('id', id)
-          .eq('created_by', user.id);
-
-      return true;
+      return await FirebaseServiceTemplate.deleteDocument(_collectionName, id);
     } catch (e) {
       debugPrint('Error deleting job: $e');
       return false;
     }
   }
 
-  // Add alias methods for compatibility
-  Future<List<Job>> getJobs() async {
+  static Future<List<Job>> getByDateRange(DateTime startDate, DateTime endDate) async {
+    try {
+      final documents = await FirebaseServiceTemplate.getDocumentsByDateRange(
+        _collectionName,
+        startDate,
+        endDate,
+        dateField: 'date'
+      );
+      return documents.map<Job>((doc) => Job.fromJson(doc)).toList();
+    } catch (e) {
+      debugPrint('Error fetching jobs by date range: $e');
+      return [];
+    }
+  }
+
+  static Future<List<Job>> search(String query) async {
+    try {
+      final documents = await FirebaseServiceTemplate.searchDocuments(
+        _collectionName,
+        'title',
+        query
+      );
+      return documents.map<Job>((doc) => Job.fromJson(doc)).toList();
+    } catch (e) {
+      debugPrint('Error searching jobs: $e');
+      return [];
+    }
+  }
+
+  // Additional methods for compatibility
+  static Future<List<Job>> getJobs() async {
     return await list();
   }
 
-  Future<bool> deleteJob(String id) async {
+  static Future<bool> deleteJob(String id) async {
     return await delete(id);
   }
 }

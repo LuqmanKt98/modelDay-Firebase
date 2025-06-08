@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:new_flutter/widgets/ui/input.dart' as ui;
 import 'package:new_flutter/widgets/ui/button.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
+import '../services/auth_service.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -39,34 +40,24 @@ class _RegisterPageState extends State<RegisterPage> {
     });
 
     try {
-      final supabase = Supabase.instance.client;
-      
-      final response = await supabase.auth.signUp(
+      final authService = context.read<AuthService>();
+
+      final fullName = '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}';
+
+      await authService.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text,
-        data: {
-          'first_name': _firstNameController.text.trim(),
-          'last_name': _lastNameController.text.trim(),
-        },
+        fullName: fullName,
       );
 
       if (mounted) {
-        if (response.user != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Registration successful! Please check your email to verify your account.'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          Navigator.pushReplacementNamed(context, '/signin');
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Registration failed. Please try again.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registration successful! Welcome to ModelDay!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Navigation is handled by AuthService
       }
     } catch (e) {
       if (mounted) {

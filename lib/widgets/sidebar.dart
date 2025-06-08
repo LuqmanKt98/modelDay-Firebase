@@ -480,7 +480,7 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
       child: Consumer<AuthService>(
         builder: (context, authService, child) {
           final user = authService.currentUser;
-          final userName = user?.userMetadata?['full_name'] ?? 'User';
+          final userName = user?.displayName ?? 'User';
           final userEmail = user?.email ?? 'user@example.com';
 
           return GestureDetector(

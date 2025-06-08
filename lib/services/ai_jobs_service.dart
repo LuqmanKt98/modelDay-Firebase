@@ -1,19 +1,14 @@
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/ai_job.dart';
+import 'firebase_service_template.dart';
 
 class AiJobsService {
-  static const String tableName = 'AiJob';
+  static const String _collectionName = 'ai_jobs';
 
   static Future<List<AiJob>> list() async {
     try {
-      final supabase = Supabase.instance.client;
-      final response = await supabase
-          .from(tableName)
-          .select('*')
-          .order('created_date', ascending: false);
-
-      return (response as List).map((aiJob) => AiJob.fromJson(aiJob)).toList();
+      final documents = await FirebaseServiceTemplate.getUserDocuments(_collectionName);
+      return documents.map<AiJob>((doc) => AiJob.fromJson(doc)).toList();
     } catch (e) {
       debugPrint('Error fetching AI jobs: $e');
       return [];
@@ -22,11 +17,11 @@ class AiJobsService {
 
   static Future<AiJob?> getById(String id) async {
     try {
-      final supabase = Supabase.instance.client;
-      final response =
-          await supabase.from(tableName).select('*').eq('id', id).single();
-
-      return AiJob.fromJson(response);
+      final doc = await FirebaseServiceTemplate.getDocument(_collectionName, id);
+      if (doc != null) {
+        return AiJob.fromJson(doc);
+      }
+      return null;
     } catch (e) {
       debugPrint('Error fetching AI job: $e');
       return null;
@@ -35,44 +30,24 @@ class AiJobsService {
 
   static Future<AiJob?> create(Map<String, dynamic> aiJobData) async {
     try {
-      final supabase = Supabase.instance.client;
-      final user = supabase.auth.currentUser;
-      if (user == null) throw Exception('User not authenticated');
-
-      final data = {
-        ...aiJobData,
-        'id': _generateUuid(),
-        'created_date': DateTime.now().toIso8601String(),
-        'created_by': user.id,
-      };
-
-      final response =
-          await supabase.from(tableName).insert(data).select().single();
-
-      return AiJob.fromJson(response);
+      final docId = await FirebaseServiceTemplate.createDocument(_collectionName, aiJobData);
+      if (docId != null) {
+        return await getById(docId);
+      }
+      return null;
     } catch (e) {
       debugPrint('Error creating AI job: $e');
       return null;
     }
   }
 
-  static Future<AiJob?> update(
-      String id, Map<String, dynamic> aiJobData) async {
+  static Future<AiJob?> update(String id, Map<String, dynamic> aiJobData) async {
     try {
-      final supabase = Supabase.instance.client;
-      final data = {
-        ...aiJobData,
-        'updated_date': DateTime.now().toIso8601String(),
-      };
-
-      final response = await supabase
-          .from(tableName)
-          .update(data)
-          .eq('id', id)
-          .select()
-          .single();
-
-      return AiJob.fromJson(response);
+      final success = await FirebaseServiceTemplate.updateDocument(_collectionName, id, aiJobData);
+      if (success) {
+        return await getById(id);
+      }
+      return null;
     } catch (e) {
       debugPrint('Error updating AI job: $e');
       return null;
@@ -81,27 +56,19 @@ class AiJobsService {
 
   static Future<bool> delete(String id) async {
     try {
-      final supabase = Supabase.instance.client;
-      await supabase.from(tableName).delete().eq('id', id);
-      return true;
+      return await FirebaseServiceTemplate.deleteDocument(_collectionName, id);
     } catch (e) {
       debugPrint('Error deleting AI job: $e');
       return false;
     }
   }
 
-  static Future<List<AiJob>> getByDateRange(
-      DateTime startDate, DateTime endDate) async {
+  static Future<List<AiJob>> getByDateRange(DateTime startDate, DateTime endDate) async {
     try {
-      final supabase = Supabase.instance.client;
-      final response = await supabase
-          .from(tableName)
-          .select('*')
-          .gte('date', startDate.toIso8601String().split('T')[0])
-          .lte('date', endDate.toIso8601String().split('T')[0])
-          .order('date', ascending: true);
-
-      return (response as List).map((aiJob) => AiJob.fromJson(aiJob)).toList();
+      final documents = await FirebaseServiceTemplate.getDocumentsByDateRange(
+        _collectionName, startDate, endDate, dateField: 'date'
+      );
+      return documents.map<AiJob>((doc) => AiJob.fromJson(doc)).toList();
     } catch (e) {
       debugPrint('Error fetching AI jobs by date range: $e');
       return [];
@@ -110,33 +77,11 @@ class AiJobsService {
 
   static Future<List<AiJob>> search(String query) async {
     try {
-      final supabase = Supabase.instance.client;
-      final response = await supabase
-          .from(tableName)
-          .select('*')
-          .or('client_name.ilike.%$query%,type.ilike.%$query%,location.ilike.%$query%')
-          .order('date', ascending: false);
-
-      return (response as List).map((aiJob) => AiJob.fromJson(aiJob)).toList();
+      final documents = await FirebaseServiceTemplate.searchDocuments(_collectionName, 'title', query);
+      return documents.map<AiJob>((doc) => AiJob.fromJson(doc)).toList();
     } catch (e) {
       debugPrint('Error searching AI jobs: $e');
       return [];
     }
-  }
-
-  static String _generateUuid() {
-    // Simple UUID v4 generator
-    const chars = '0123456789abcdef';
-    final random = DateTime.now().millisecondsSinceEpoch;
-    var uuid = '';
-
-    for (int i = 0; i < 32; i++) {
-      if (i == 8 || i == 12 || i == 16 || i == 20) {
-        uuid += '-';
-      }
-      uuid += chars[(random + i) % chars.length];
-    }
-
-    return uuid;
   }
 }

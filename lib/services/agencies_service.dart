@@ -1,21 +1,14 @@
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/agency.dart';
+import 'firebase_service_template.dart';
 
 class AgenciesService {
-  static const String tableName = 'Agency';
+  static const String _collectionName = 'agencies';
 
   static Future<List<Agency>> list() async {
     try {
-      final supabase = Supabase.instance.client;
-      final response = await supabase
-          .from(tableName)
-          .select('*')
-          .order('created_date', ascending: false);
-
-      return (response as List)
-          .map((agency) => Agency.fromJson(agency))
-          .toList();
+      final documents = await FirebaseServiceTemplate.getUserDocuments(_collectionName);
+      return documents.map<Agency>((doc) => Agency.fromJson(doc)).toList();
     } catch (e) {
       debugPrint('Error fetching agencies: $e');
       return [];
@@ -24,11 +17,11 @@ class AgenciesService {
 
   static Future<Agency?> getById(String id) async {
     try {
-      final supabase = Supabase.instance.client;
-      final response =
-          await supabase.from(tableName).select('*').eq('id', id).single();
-
-      return Agency.fromJson(response);
+      final doc = await FirebaseServiceTemplate.getDocument(_collectionName, id);
+      if (doc != null) {
+        return Agency.fromJson(doc);
+      }
+      return null;
     } catch (e) {
       debugPrint('Error fetching agency: $e');
       return null;
@@ -37,44 +30,24 @@ class AgenciesService {
 
   static Future<Agency?> create(Map<String, dynamic> agencyData) async {
     try {
-      final supabase = Supabase.instance.client;
-      final user = supabase.auth.currentUser;
-      if (user == null) throw Exception('User not authenticated');
-
-      final data = {
-        ...agencyData,
-        'id': _generateUuid(),
-        'created_date': DateTime.now().toIso8601String(),
-        'created_by': user.id,
-      };
-
-      final response =
-          await supabase.from(tableName).insert(data).select().single();
-
-      return Agency.fromJson(response);
+      final docId = await FirebaseServiceTemplate.createDocument(_collectionName, agencyData);
+      if (docId != null) {
+        return await getById(docId);
+      }
+      return null;
     } catch (e) {
       debugPrint('Error creating agency: $e');
       return null;
     }
   }
 
-  static Future<Agency?> update(
-      String id, Map<String, dynamic> agencyData) async {
+  static Future<Agency?> update(String id, Map<String, dynamic> agencyData) async {
     try {
-      final supabase = Supabase.instance.client;
-      final data = {
-        ...agencyData,
-        'updated_date': DateTime.now().toIso8601String(),
-      };
-
-      final response = await supabase
-          .from(tableName)
-          .update(data)
-          .eq('id', id)
-          .select()
-          .single();
-
-      return Agency.fromJson(response);
+      final success = await FirebaseServiceTemplate.updateDocument(_collectionName, id, agencyData);
+      if (success) {
+        return await getById(id);
+      }
+      return null;
     } catch (e) {
       debugPrint('Error updating agency: $e');
       return null;
@@ -83,9 +56,7 @@ class AgenciesService {
 
   static Future<bool> delete(String id) async {
     try {
-      final supabase = Supabase.instance.client;
-      await supabase.from(tableName).delete().eq('id', id);
-      return true;
+      return await FirebaseServiceTemplate.deleteDocument(_collectionName, id);
     } catch (e) {
       debugPrint('Error deleting agency: $e');
       return false;
@@ -94,35 +65,11 @@ class AgenciesService {
 
   static Future<List<Agency>> search(String query) async {
     try {
-      final supabase = Supabase.instance.client;
-      final response = await supabase
-          .from(tableName)
-          .select('*')
-          .or('name.ilike.%$query%,city.ilike.%$query%,country.ilike.%$query%')
-          .order('name', ascending: true);
-
-      return (response as List)
-          .map((agency) => Agency.fromJson(agency))
-          .toList();
+      final documents = await FirebaseServiceTemplate.searchDocuments(_collectionName, 'name', query);
+      return documents.map<Agency>((doc) => Agency.fromJson(doc)).toList();
     } catch (e) {
       debugPrint('Error searching agencies: $e');
       return [];
     }
-  }
-
-  static String _generateUuid() {
-    // Simple UUID v4 generator
-    const chars = '0123456789abcdef';
-    final random = DateTime.now().millisecondsSinceEpoch;
-    var uuid = '';
-
-    for (int i = 0; i < 32; i++) {
-      if (i == 8 || i == 12 || i == 16 || i == 20) {
-        uuid += '-';
-      }
-      uuid += chars[(random + i) % chars.length];
-    }
-
-    return uuid;
   }
 }

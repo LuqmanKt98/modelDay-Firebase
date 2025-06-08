@@ -1,148 +1,87 @@
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/job_gallery.dart';
+import 'firebase_service_template.dart';
 
 class JobGalleryService {
-  static const String tableName = 'JobGallery';
+  static const String _collectionName = 'job_gallery';
 
   static Future<List<JobGallery>> list() async {
     try {
-      final supabase = Supabase.instance.client;
-      final response = await supabase
-          .from(tableName)
-          .select('*')
-          .order('created_date', ascending: false);
-
-      return (response as List)
-          .map((gallery) => JobGallery.fromJson(gallery))
-          .toList();
+      final documents = await FirebaseServiceTemplate.getUserDocuments(_collectionName);
+      return documents.map<JobGallery>((doc) => JobGallery.fromJson(doc)).toList();
     } catch (e) {
-      debugPrint('Error fetching job galleries: $e');
+      debugPrint('Error fetching job gallery: $e');
       return [];
     }
   }
 
   static Future<JobGallery?> getById(String id) async {
     try {
-      final supabase = Supabase.instance.client;
-      final response =
-          await supabase.from(tableName).select('*').eq('id', id).single();
-
-      return JobGallery.fromJson(response);
+      final doc = await FirebaseServiceTemplate.getDocument(_collectionName, id);
+      if (doc != null) {
+        return JobGallery.fromJson(doc);
+      }
+      return null;
     } catch (e) {
-      debugPrint('Error fetching job gallery: $e');
+      debugPrint('Error fetching job gallery item: $e');
       return null;
     }
   }
 
   static Future<JobGallery?> create(Map<String, dynamic> galleryData) async {
     try {
-      final supabase = Supabase.instance.client;
-      final user = supabase.auth.currentUser;
-      if (user == null) throw Exception('User not authenticated');
-
-      final data = {
-        ...galleryData,
-        'id': _generateUuid(),
-        'created_date': DateTime.now().toIso8601String(),
-        'created_by': user.id,
-      };
-
-      final response =
-          await supabase.from(tableName).insert(data).select().single();
-
-      return JobGallery.fromJson(response);
+      final docId = await FirebaseServiceTemplate.createDocument(_collectionName, galleryData);
+      if (docId != null) {
+        return await getById(docId);
+      }
+      return null;
     } catch (e) {
-      debugPrint('Error creating job gallery: $e');
+      debugPrint('Error creating job gallery item: $e');
       return null;
     }
   }
 
-  static Future<JobGallery?> update(
-      String id, Map<String, dynamic> galleryData) async {
+  static Future<JobGallery?> update(String id, Map<String, dynamic> galleryData) async {
     try {
-      final supabase = Supabase.instance.client;
-      final data = {
-        ...galleryData,
-        'updated_date': DateTime.now().toIso8601String(),
-      };
-
-      final response = await supabase
-          .from(tableName)
-          .update(data)
-          .eq('id', id)
-          .select()
-          .single();
-
-      return JobGallery.fromJson(response);
+      final success = await FirebaseServiceTemplate.updateDocument(_collectionName, id, galleryData);
+      if (success) {
+        return await getById(id);
+      }
+      return null;
     } catch (e) {
-      debugPrint('Error updating job gallery: $e');
+      debugPrint('Error updating job gallery item: $e');
       return null;
     }
   }
 
   static Future<bool> delete(String id) async {
     try {
-      final supabase = Supabase.instance.client;
-      await supabase.from(tableName).delete().eq('id', id);
-      return true;
+      return await FirebaseServiceTemplate.deleteDocument(_collectionName, id);
     } catch (e) {
-      debugPrint('Error deleting job gallery: $e');
+      debugPrint('Error deleting job gallery item: $e');
       return false;
     }
   }
 
-  static Future<List<JobGallery>> getByDateRange(
-      DateTime startDate, DateTime endDate) async {
+  static Future<List<JobGallery>> getByDateRange(DateTime startDate, DateTime endDate) async {
     try {
-      final supabase = Supabase.instance.client;
-      final response = await supabase
-          .from(tableName)
-          .select('*')
-          .gte('date', startDate.toIso8601String().split('T')[0])
-          .lte('date', endDate.toIso8601String().split('T')[0])
-          .order('date', ascending: true);
-
-      return (response as List)
-          .map((gallery) => JobGallery.fromJson(gallery))
-          .toList();
+      final documents = await FirebaseServiceTemplate.getDocumentsByDateRange(
+        _collectionName, startDate, endDate, dateField: 'date'
+      );
+      return documents.map<JobGallery>((doc) => JobGallery.fromJson(doc)).toList();
     } catch (e) {
-      debugPrint('Error fetching job galleries by date range: $e');
+      debugPrint('Error fetching job gallery by date range: $e');
       return [];
     }
   }
 
   static Future<List<JobGallery>> search(String query) async {
     try {
-      final supabase = Supabase.instance.client;
-      final response = await supabase
-          .from(tableName)
-          .select('*')
-          .or('name.ilike.%$query%,photographer_name.ilike.%$query%,location.ilike.%$query%')
-          .order('date', ascending: false);
-
-      return (response as List)
-          .map((gallery) => JobGallery.fromJson(gallery))
-          .toList();
+      final documents = await FirebaseServiceTemplate.searchDocuments(_collectionName, 'title', query);
+      return documents.map<JobGallery>((doc) => JobGallery.fromJson(doc)).toList();
     } catch (e) {
-      debugPrint('Error searching job galleries: $e');
+      debugPrint('Error searching job gallery: $e');
       return [];
     }
-  }
-
-  static String _generateUuid() {
-    // Simple UUID v4 generator
-    const chars = '0123456789abcdef';
-    final random = DateTime.now().millisecondsSinceEpoch;
-    var uuid = '';
-
-    for (int i = 0; i < 32; i++) {
-      if (i == 8 || i == 12 || i == 16 || i == 20) {
-        uuid += '-';
-      }
-      uuid += chars[(random + i) % chars.length];
-    }
-
-    return uuid;
   }
 }

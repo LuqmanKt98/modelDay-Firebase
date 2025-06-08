@@ -67,8 +67,7 @@ class _JobsPageState extends State<JobsPage> {
         error = null;
       });
 
-      final jobsService = JobsService();
-      final loadedJobs = await jobsService.getJobs();
+      final loadedJobs = await JobsService.getJobs();
       setState(() {
         jobs = loadedJobs;
         isLoading = false;
@@ -116,8 +115,7 @@ class _JobsPageState extends State<JobsPage> {
 
     if (confirmed == true) {
       try {
-        final jobsService = JobsService();
-        final success = await jobsService.deleteJob(job.id!);
+        final success = await JobsService.deleteJob(job.id!);
         if (success) {
           await _loadJobs();
           if (mounted) {

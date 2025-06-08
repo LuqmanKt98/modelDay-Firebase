@@ -164,7 +164,7 @@ class _EnhancedWelcomePageState extends State<EnhancedWelcomePage> {
     return Consumer<AuthService>(
       builder: (context, authService, child) {
         final user = authService.currentUser;
-        final userName = user?.userMetadata?['full_name'] ?? 'shujah';
+        final userName = user?.displayName ?? 'User';
 
         return Column(
           children: [

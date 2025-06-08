@@ -64,12 +64,12 @@ class _WelcomePageState extends State<WelcomePage> {
     final authService = AuthService();
     final user = authService.currentUser;
 
-    if (user?.userMetadata?['full_name'] != null) {
-      return user!.userMetadata!['full_name'];
+    if (user?.displayName != null && user!.displayName!.isNotEmpty) {
+      return user.displayName!;
     }
 
     if (user?.email != null) {
-      // Fallback to username from email if full name not available
+      // Fallback to username from email if display name not available
       return user!.email!.split('@').first;
     }
 
@@ -78,9 +78,9 @@ class _WelcomePageState extends State<WelcomePage> {
 
   Future<void> _loadDashboardData() async {
     try {
-      final shootings = await ShootingsService().getShootings();
-      final polaroids = await PolaroidsService().getPolaroids();
-      final meetings = await MeetingsService().getUpcomingMeetings();
+      final shootings = await ShootingsService.getShootings();
+      final polaroids = await PolaroidsService.getPolaroids();
+      final meetings = await MeetingsService.getUpcomingMeetings();
       final jobs = await JobsService.list();
 
       if (mounted) {

@@ -155,9 +155,9 @@ class _NewIndustryContactPageState extends State<NewIndustryContactPage> {
       );
 
       if (_isEditing && _editingId != null) {
-        await _contactsService.updateIndustryContact(_editingId!, contact);
+        await _contactsService.updateIndustryContact(_editingId!, contact.toJson());
       } else {
-        await _contactsService.createIndustryContact(contact);
+        await _contactsService.createIndustryContact(contact.toJson());
       }
 
       if (mounted) {
