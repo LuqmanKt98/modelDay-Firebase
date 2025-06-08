@@ -45,6 +45,8 @@ class Agency {
   final List<Contact> additionalContacts;
   final double commissionRate;
   final String? contract;
+  final DateTime? contractSigned;
+  final DateTime? contractExpired;
   final String? notes;
   final String? status;
 
@@ -65,6 +67,8 @@ class Agency {
     this.additionalContacts = const [],
     this.commissionRate = 0.0,
     this.contract,
+    this.contractSigned,
+    this.contractExpired,
     this.notes,
     this.status,
   });
@@ -91,6 +95,12 @@ class Agency {
       additionalContacts: _parseContactList(json['additional_contacts']),
       commissionRate: (json['commission_rate'] ?? 0).toDouble(),
       contract: json['contract'],
+      contractSigned: json['contract_signed'] != null
+          ? DateTime.parse(json['contract_signed'])
+          : null,
+      contractExpired: json['contract_expired'] != null
+          ? DateTime.parse(json['contract_expired'])
+          : null,
       notes: json['notes'],
       status: json['status'],
     );
@@ -158,6 +168,8 @@ class Agency {
           : null,
       'commission_rate': commissionRate,
       'contract': contract,
+      'contract_signed': contractSigned?.toIso8601String(),
+      'contract_expired': contractExpired?.toIso8601String(),
       'notes': notes,
       'status': status,
     };
@@ -180,6 +192,8 @@ class Agency {
     List<Contact>? additionalContacts,
     double? commissionRate,
     String? contract,
+    DateTime? contractSigned,
+    DateTime? contractExpired,
     String? notes,
     String? status,
   }) {
@@ -200,6 +214,8 @@ class Agency {
       additionalContacts: additionalContacts ?? this.additionalContacts,
       commissionRate: commissionRate ?? this.commissionRate,
       contract: contract ?? this.contract,
+      contractSigned: contractSigned ?? this.contractSigned,
+      contractExpired: contractExpired ?? this.contractExpired,
       notes: notes ?? this.notes,
       status: status ?? this.status,
     );

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:provider/provider.dart';
 import 'package:new_flutter/services/auth_service.dart';
 import 'package:new_flutter/services/jobs_service.dart';
 import 'package:new_flutter/services/shootings_service.dart';
@@ -34,28 +33,47 @@ class _WelcomePageState extends State<WelcomePage> {
 
   Future<void> _checkOnboardingStatus() async {
     try {
-      final authService = context.read<AuthService>();
+      final authService = AuthService();
       final user = authService.currentUser;
 
       if (user != null) {
         debugPrint('Welcome Page - User: ${user.email}');
-        debugPrint('Welcome Page - Showing tour overlay for every login');
 
-        // Show the tour for every user on every login
-        Future.delayed(const Duration(milliseconds: 800), () {
-          if (mounted) {
-            _showTourOverlay();
-          }
-        });
+        // Check if the user has already seen the onboarding tour
+        final hasSeenTour = await authService.hasSeenOnboardingTour();
+        debugPrint('Welcome Page - Has seen tour: $hasSeenTour');
+
+        // Only show the tour if the user hasn't seen it yet
+        if (!hasSeenTour) {
+          debugPrint('Welcome Page - Showing tour overlay for first time');
+          Future.delayed(const Duration(milliseconds: 800), () {
+            if (mounted) {
+              _showTourOverlay();
+            }
+          });
+        } else {
+          debugPrint('Welcome Page - Tour already seen, skipping');
+        }
       }
     } catch (error) {
       debugPrint('Error checking onboarding status: $error');
     }
   }
 
-  String _extractUsername(String email) {
-    // Extract username from email (part before @)
-    return email.split('@').first;
+  String _getUserDisplayName() {
+    final authService = AuthService();
+    final user = authService.currentUser;
+
+    if (user?.userMetadata?['full_name'] != null) {
+      return user!.userMetadata!['full_name'];
+    }
+
+    if (user?.email != null) {
+      // Fallback to username from email if full name not available
+      return user!.email!.split('@').first;
+    }
+
+    return 'User';
   }
 
   Future<void> _loadDashboardData() async {
@@ -84,9 +102,169 @@ class _WelcomePageState extends State<WelcomePage> {
     }
   }
 
+  Widget _buildQuickAddEventButton() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.goldColor.withValues(alpha: 0.15),
+            AppTheme.goldColor.withValues(alpha: 0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppTheme.goldColor.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.goldColor.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.add_circle_outline,
+                  color: AppTheme.goldColor,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Quick Add Event',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Add a new job, casting, or other event',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  _showEventTypeSelector();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.goldColor,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Add Event',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 800.ms, delay: 300.ms).slideY(begin: 0.2);
+  }
+
+  void _showEventTypeSelector() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: AppTheme.surfaceColor,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Select Event Type',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                _buildEventTypeChip('Option', Icons.schedule, '/new-option'),
+                _buildEventTypeChip('Job', Icons.work, '/new-job'),
+                _buildEventTypeChip('Direct Option', Icons.arrow_forward, '/new-direct-option'),
+                _buildEventTypeChip('Direct Booking', Icons.book_online, '/new-direct-booking'),
+                _buildEventTypeChip('Casting', Icons.person_search, '/new-casting'),
+                _buildEventTypeChip('On Stay', Icons.hotel, '/new-on-stay'),
+                _buildEventTypeChip('Test', Icons.camera, '/new-test'),
+                _buildEventTypeChip('Polaroids', Icons.photo_camera, '/new-polaroids'),
+                _buildEventTypeChip('Meeting', Icons.meeting_room, '/new-meeting'),
+                _buildEventTypeChip('Other', Icons.more_horiz, '/new-other'),
+              ],
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEventTypeChip(String label, IconData icon, String route) {
+    return InkWell(
+      onTap: () {
+        Navigator.pop(context);
+        Navigator.pushNamed(context, route);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppTheme.cardColor,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppTheme.goldColor.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: AppTheme.goldColor, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final user = context.watch<AuthService>().currentUser;
+    final user = AuthService().currentUser;
 
     return Stack(
       children: [
@@ -157,7 +335,7 @@ class _WelcomePageState extends State<WelcomePage> {
                                 ),
                                 if (user?.email != null)
                                   TextSpan(
-                                    text: _extractUsername(user!.email!),
+                                    text: _getUserDisplayName(),
                                     style: const TextStyle(
                                       fontSize: 42,
                                       fontWeight: FontWeight.w900,
@@ -194,6 +372,11 @@ class _WelcomePageState extends State<WelcomePage> {
                         ],
                       ),
                     ).animate().fadeIn(duration: 1000.ms).scale(begin: const Offset(0.95, 0.95)),
+
+                    const SizedBox(height: 32),
+
+                    // Quick Add Event Button
+                    _buildQuickAddEventButton(),
 
                     const SizedBox(height: 40),
 

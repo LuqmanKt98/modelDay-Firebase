@@ -22,6 +22,10 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
   final _commissionRateController = TextEditingController();
   final _notesController = TextEditingController();
 
+  // Contract fields
+  final _contractSignedController = TextEditingController();
+  final _contractExpiredController = TextEditingController();
+
   // Main Booker
   final _mainBookerNameController = TextEditingController();
   final _mainBookerEmailController = TextEditingController();
@@ -33,11 +37,15 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
   final _financePhoneController = TextEditingController();
 
   String _selectedStatus = 'active';
+  String _selectedType = 'representing';
   bool _isLoading = false;
   bool _isEditing = false;
   String? _editingId;
+  DateTime? _contractSigned;
+  DateTime? _contractExpired;
 
   final List<String> _statusOptions = ['active', 'inactive', 'pending'];
+  final List<String> _typeOptions = ['representing', 'mother agency'];
 
   @override
   void initState() {
@@ -62,6 +70,7 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
       if (agency != null) {
         setState(() {
           _nameController.text = agency.name;
+          _selectedType = agency.agencyType ?? 'representing';
           _websiteController.text = agency.website ?? '';
           _addressController.text = agency.address ?? '';
           _cityController.text = agency.city ?? '';
@@ -69,6 +78,18 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
           _commissionRateController.text = agency.commissionRate.toString();
           _notesController.text = agency.notes ?? '';
           _selectedStatus = agency.status ?? 'active';
+
+          // Contract dates
+          if (agency.contractSigned != null) {
+            _contractSigned = agency.contractSigned;
+            _contractSignedController.text =
+                '${agency.contractSigned!.day}/${agency.contractSigned!.month}/${agency.contractSigned!.year}';
+          }
+          if (agency.contractExpired != null) {
+            _contractExpired = agency.contractExpired;
+            _contractExpiredController.text =
+                '${agency.contractExpired!.day}/${agency.contractExpired!.month}/${agency.contractExpired!.year}';
+          }
 
           // Main Booker
           if (agency.mainBooker != null) {
@@ -116,6 +137,8 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
     _financeNameController.dispose();
     _financeEmailController.dispose();
     _financePhoneController.dispose();
+    _contractSignedController.dispose();
+    _contractExpiredController.dispose();
     super.dispose();
   }
 
@@ -129,6 +152,7 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
     try {
       final agencyData = {
         'name': _nameController.text,
+        'agency_type': _selectedType,
         'website':
             _websiteController.text.isEmpty ? null : _websiteController.text,
         'address':
@@ -138,6 +162,8 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
             _countryController.text.isEmpty ? null : _countryController.text,
         'commission_rate':
             double.tryParse(_commissionRateController.text) ?? 0.0,
+        'contract_signed': _contractSigned?.toIso8601String(),
+        'contract_expired': _contractExpired?.toIso8601String(),
         'notes': _notesController.text.isEmpty ? null : _notesController.text,
         'status': _selectedStatus,
         'main_booker': {
@@ -214,6 +240,8 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
                       return null;
                     },
                   ),
+                  const SizedBox(height: 16),
+                  _buildTypeField(),
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Website',
@@ -337,6 +365,71 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
               ),
               const SizedBox(height: 24),
 
+              // Contract Information
+              _buildSectionCard(
+                'Contract Information',
+                [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          decoration: const InputDecoration(
+                            labelText: 'Contract Signed Date',
+                            border: OutlineInputBorder(),
+                            suffixIcon: Icon(Icons.calendar_today),
+                          ),
+                          readOnly: true,
+                          controller: _contractSignedController,
+                          onTap: () async {
+                            final date = await showDatePicker(
+                              context: context,
+                              initialDate: _contractSigned ?? DateTime.now(),
+                              firstDate: DateTime(2000),
+                              lastDate: DateTime(2100),
+                            );
+                            if (date != null) {
+                              setState(() {
+                                _contractSigned = date;
+                                _contractSignedController.text =
+                                    '${date.day}/${date.month}/${date.year}';
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextFormField(
+                          decoration: const InputDecoration(
+                            labelText: 'Contract Expired Date',
+                            border: OutlineInputBorder(),
+                            suffixIcon: Icon(Icons.calendar_today),
+                          ),
+                          readOnly: true,
+                          controller: _contractExpiredController,
+                          onTap: () async {
+                            final date = await showDatePicker(
+                              context: context,
+                              initialDate: _contractExpired ?? DateTime.now().add(const Duration(days: 365)),
+                              firstDate: DateTime.now(),
+                              lastDate: DateTime(2100),
+                            );
+                            if (date != null) {
+                              setState(() {
+                                _contractExpired = date;
+                                _contractExpiredController.text =
+                                    '${date.day}/${date.month}/${date.year}';
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
               // Notes
               _buildSectionCard(
                 'Notes',
@@ -446,6 +539,54 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
             onChanged: (value) {
               setState(() {
                 _selectedStatus = value ?? 'active';
+              });
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTypeField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Agency Type',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E1E1E),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: const Color(0xFF2E2E2E)),
+          ),
+          child: DropdownButtonFormField<String>(
+            value: _selectedType,
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            dropdownColor: Colors.black,
+            style: const TextStyle(color: Colors.white),
+            items: _typeOptions.map((type) {
+              return DropdownMenuItem<String>(
+                value: type,
+                child: Text(
+                  type.toUpperCase(),
+                  style: const TextStyle(color: Colors.white),
+                ),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _selectedType = value ?? 'representing';
               });
             },
           ),

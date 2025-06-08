@@ -64,6 +64,13 @@ dependencies:
   # Image picker for gallery uploads
   image_picker: ^1.0.4
 
+  # File picker for document uploads
+  file_picker: ^6.1.1
+
+  # Export functionality
+  share_plus: ^7.2.1
+  path_provider: ^2.1.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

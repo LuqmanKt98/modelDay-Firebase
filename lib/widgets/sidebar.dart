@@ -35,46 +35,46 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
 
   final eventTypes = [
     {
-      'label': 'Direct Bookings',
+      'label': 'Option',
+      'icon': Icons.schedule,
+      'path': '/new-option',
+      'color': Colors.blue,
+    },
+    {
+      'label': 'Job',
+      'icon': Icons.work,
+      'path': '/jobs',
+      'color': Colors.green,
+    },
+    {
+      'label': 'Direct Option',
+      'icon': Icons.arrow_forward,
+      'path': '/direct-options',
+      'color': Colors.cyan,
+    },
+    {
+      'label': 'Direct Booking',
       'icon': Icons.calendar_today,
       'path': '/direct-bookings',
       'color': Colors.teal,
     },
     {
-      'label': 'Direct Options',
-      'icon': Icons.calendar_month,
-      'path': '/direct-options',
-      'color': Colors.cyan,
-    },
-    {
-      'label': 'Jobs',
-      'icon': Icons.work,
-      'path': '/jobs',
-      'color': Colors.blue,
-    },
-    {
-      'label': 'Castings',
+      'label': 'Casting',
       'icon': Icons.videocam,
       'path': '/castings',
       'color': Colors.purple,
     },
     {
-      'label': 'Tests',
-      'icon': Icons.camera,
-      'path': '/tests',
-      'color': Colors.green,
-    },
-    {
-      'label': 'OnStay',
+      'label': 'On Stay',
       'icon': Icons.home,
       'path': '/on-stay',
       'color': Colors.orange,
     },
     {
-      'label': 'Shootings',
-      'icon': Icons.photo_camera,
-      'path': '/shootings',
-      'color': Colors.amber,
+      'label': 'Test',
+      'icon': Icons.camera,
+      'path': '/tests',
+      'color': Colors.green,
     },
     {
       'label': 'Polaroids',
@@ -83,7 +83,7 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
       'color': Colors.pink,
     },
     {
-      'label': 'Meetings',
+      'label': 'Meeting',
       'icon': Icons.people,
       'path': '/meetings',
       'color': Colors.yellow,
@@ -93,6 +93,12 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
       'icon': Icons.auto_awesome,
       'path': '/ai-jobs',
       'color': Colors.white,
+    },
+    {
+      'label': 'Other',
+      'icon': Icons.more_horiz,
+      'path': '/new-other',
+      'color': Colors.grey,
     },
   ];
 
@@ -257,7 +263,7 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                   _buildNavItem('Welcome', Icons.home, '/welcome'),
                   _buildNavItem('Calendar', Icons.calendar_today, '/calendar'),
                   _buildNavItem(
-                    'All Activities',
+                    'Full Schedule',
                     Icons.list,
                     '/all-activities',
                   ),

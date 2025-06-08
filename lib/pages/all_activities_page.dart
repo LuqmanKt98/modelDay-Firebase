@@ -28,7 +28,20 @@ class _AllActivitiesPageState extends State<AllActivitiesPage> {
   String _sortBy = 'date';
   final bool _ascending = false;
 
-  final List<String> _types = ['all', 'job', 'casting', 'test'];
+  final List<String> _types = [
+    'all',
+    'option',
+    'job',
+    'direct-option',
+    'direct-booking',
+    'casting',
+    'on-stay',
+    'test',
+    'polaroids',
+    'meeting',
+    'ai-jobs',
+    'other'
+  ];
   final List<String> _statuses = [
     'all',
     'pending',

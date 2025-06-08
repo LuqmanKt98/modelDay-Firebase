@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import '../../services/auth_service.dart';
 
 class WelcomeGuide extends StatefulWidget {
   final bool isOpen;
@@ -143,8 +144,13 @@ class _WelcomeGuideState extends State<WelcomeGuide>
   }
 
   Future<void> _markTourAsSeen() async {
-    // No longer marking tour as seen since we want it to show every time
-    debugPrint('Tour completed - not marking as seen to allow repeated viewing');
+    try {
+      final authService = AuthService();
+      await authService.markOnboardingTourAsSeen();
+      debugPrint('Tour marked as seen');
+    } catch (e) {
+      debugPrint('Error marking tour as seen: $e');
+    }
   }
 
   void _handleNext() {

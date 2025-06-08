@@ -26,14 +26,6 @@ import 'package:new_flutter/pages/job_gallery_page.dart';
 import 'package:new_flutter/pages/profile_page.dart';
 import 'package:new_flutter/pages/settings_page.dart';
 import 'package:new_flutter/pages/new_job_page.dart';
-import 'package:new_flutter/pages/new_casting_page.dart';
-import 'package:new_flutter/pages/new_test_page.dart';
-import 'package:new_flutter/pages/new_shooting_page.dart';
-import 'package:new_flutter/pages/new_polaroid_page.dart';
-import 'package:new_flutter/pages/new_meeting_page.dart';
-import 'package:new_flutter/pages/new_direct_booking_page.dart';
-import 'package:new_flutter/pages/new_direct_option_page.dart';
-import 'package:new_flutter/pages/new_on_stay_page.dart';
 import 'package:new_flutter/pages/new_ai_job_page.dart';
 import 'package:new_flutter/pages/new_job_gallery_page.dart';
 import 'package:new_flutter/pages/forgot_password_page.dart';
@@ -46,6 +38,8 @@ import 'package:new_flutter/pages/new_agency_page.dart';
 import 'package:new_flutter/pages/new_agent_page.dart';
 import 'package:new_flutter/pages/new_industry_contact_page.dart';
 import 'package:new_flutter/pages/splash_page.dart';
+import 'package:new_flutter/pages/new_event_page.dart';
+import 'package:new_flutter/models/event.dart';
 import 'package:new_flutter/services/auth_service.dart';
 import 'package:new_flutter/services/api_client.dart';
 import 'package:new_flutter/theme/app_theme.dart';
@@ -125,14 +119,15 @@ class MyApp extends StatelessWidget {
           '/profile': (context) => const ProfilePage(),
           '/settings': (context) => const SettingsPage(),
           '/new-job': (context) => const NewJobPage(),
-          '/new-casting': (context) => const NewCastingPage(),
-          '/new-test': (context) => const NewTestPage(),
-          '/new-shooting': (context) => const NewShootingPage(),
-          '/new-polaroid': (context) => const NewPolaroidPage(),
-          '/new-meeting': (context) => const NewMeetingPage(),
-          '/new-direct-booking': (context) => const NewDirectBookingPage(),
-          '/new-direct-option': (context) => const NewDirectOptionPage(),
-          '/new-on-stay': (context) => const NewOnStayPage(),
+          '/new-option': (context) => const NewEventPage(eventType: EventType.option),
+          '/new-direct-option': (context) => const NewEventPage(eventType: EventType.directOption),
+          '/new-direct-booking': (context) => const NewEventPage(eventType: EventType.directBooking),
+          '/new-casting': (context) => const NewEventPage(eventType: EventType.casting),
+          '/new-on-stay': (context) => const NewEventPage(eventType: EventType.onStay),
+          '/new-test': (context) => const NewEventPage(eventType: EventType.test),
+          '/new-polaroids': (context) => const NewEventPage(eventType: EventType.polaroids),
+          '/new-meeting': (context) => const NewEventPage(eventType: EventType.meeting),
+          '/new-other': (context) => const NewEventPage(eventType: EventType.other),
           '/new-ai-job': (context) => const NewAiJobPage(),
           '/new-job-gallery': (context) => const NewJobGalleryPage(),
           '/forgot-password': (context) => const ForgotPasswordPage(),
