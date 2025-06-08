@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../services/connectivity_service.dart';
 
 class ConnectivityBanner extends StatefulWidget {
@@ -22,10 +23,18 @@ class _ConnectivityBannerState extends State<ConnectivityBanner> {
   void initState() {
     super.initState();
     _isOnline = _connectivity.isOnline;
+
+    // Don't show banner on web platforms as connectivity detection is unreliable
+    if (kIsWeb) {
+      _showBanner = false;
+      _isOnline = true;
+      return;
+    }
+
     _showBanner = !_isOnline;
 
     _connectivity.connectivityStream.listen((isOnline) {
-      if (mounted) {
+      if (mounted && !kIsWeb) {
         setState(() {
           _isOnline = isOnline;
           if (!isOnline) {
@@ -117,7 +126,8 @@ class _OfflineIndicatorState extends State<OfflineIndicator> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isOnline) return const SizedBox.shrink();
+    // Don't show offline indicator on web
+    if (_isOnline || kIsWeb) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

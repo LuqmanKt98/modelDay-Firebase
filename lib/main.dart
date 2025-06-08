@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
-import 'services/connectivity_service.dart';
 import 'package:new_flutter/pages/landing_page.dart';
 import 'package:new_flutter/pages/sign_in_page.dart';
 import 'package:new_flutter/pages/sign_up_page.dart';
@@ -55,19 +55,22 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Enable Firestore offline persistence
+  // Enable Firestore offline persistence only for mobile/desktop
   try {
-    FirebaseFirestore.instance.settings = const Settings(
-      persistenceEnabled: true,
-      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-    );
-    debugPrint('Firestore offline persistence enabled');
+    if (!kIsWeb) {
+      FirebaseFirestore.instance.settings = const Settings(
+        persistenceEnabled: true,
+        cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+      );
+      debugPrint('Firestore offline persistence enabled for mobile/desktop');
+    } else {
+      debugPrint('Firestore persistence disabled for web');
+    }
   } catch (e) {
-    debugPrint('Error enabling Firestore offline persistence: $e');
+    debugPrint('Error configuring Firestore: $e');
   }
 
-  // Initialize connectivity service
-  ConnectivityService().initialize();
+  // Connectivity service removed - not needed for simplified Firebase operations
 
   runApp(const MyApp());
 }

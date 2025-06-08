@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'token_storage_service.dart';
-import 'firebase_retry_service.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 
@@ -56,37 +55,25 @@ class AuthService extends ChangeNotifier {
   /// Create user profile in Firestore if it doesn't exist
   Future<void> _createUserProfileIfNeeded(User user) async {
     try {
-      // First try to get from cache to avoid unnecessary network calls
-      DocumentSnapshot userDoc;
-      try {
-        userDoc = await FirebaseRetryService.getDocument(
-          collection: 'users',
-          documentId: user.uid,
-          source: Source.cache,
-        );
-      } catch (e) {
-        // If cache fails, try from server
-        userDoc = await FirebaseRetryService.getDocument(
-          collection: 'users',
-          documentId: user.uid,
-          source: Source.server,
-        );
-      }
+      // Use direct Firestore calls for all platforms - simpler and more reliable
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
 
       if (!userDoc.exists) {
-        await FirebaseRetryService.setDocument(
-          collection: 'users',
-          documentId: user.uid,
-          data: {
-            'email': user.email,
-            'displayName': user.displayName,
-            'photoURL': user.photoURL,
-            'createdAt': FieldValue.serverTimestamp(),
-            'updatedAt': FieldValue.serverTimestamp(),
-            'onboarding_tour_seen': false,
-            'onboarding_completed': false,
-          },
-        );
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .set({
+          'email': user.email,
+          'displayName': user.displayName,
+          'photoURL': user.photoURL,
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+          'onboarding_tour_seen': false,
+          'onboarding_completed': false,
+        });
         debugPrint('User profile created for: ${user.email}');
       }
     } catch (e) {
@@ -265,26 +252,19 @@ class AuthService extends ChangeNotifier {
     try {
       if (_currentUser == null) return false;
 
-      // Try cache first, then server
-      DocumentSnapshot userDoc;
-      try {
-        userDoc = await FirebaseRetryService.getDocument(
-          collection: 'users',
-          documentId: _currentUser!.uid,
-          source: Source.cache,
-        );
-      } catch (e) {
-        userDoc = await FirebaseRetryService.getDocument(
-          collection: 'users',
-          documentId: _currentUser!.uid,
-          source: Source.server,
-        );
-      }
+      // Use direct Firestore calls for all platforms
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUser!.uid)
+          .get();
 
       if (!userDoc.exists) return false;
 
-      final data = userDoc.data() as Map<String, dynamic>?;
-      return data?['onboarding_tour_seen'] ?? false;
+      final data = userDoc.data();
+      if (data is Map<String, dynamic>) {
+        return data['onboarding_tour_seen'] ?? false;
+      }
+      return false;
     } catch (e) {
       debugPrint('Error checking onboarding tour status: $e');
       return false;
@@ -296,14 +276,14 @@ class AuthService extends ChangeNotifier {
     try {
       if (_currentUser == null) return;
 
-      await FirebaseRetryService.updateDocument(
-        collection: 'users',
-        documentId: _currentUser!.uid,
-        data: {
-          'onboarding_tour_seen': true,
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-      );
+      // Use direct Firestore calls for all platforms
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUser!.uid)
+          .update({
+        'onboarding_tour_seen': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
 
       debugPrint('Onboarding tour marked as seen');
     } catch (e) {
@@ -317,14 +297,14 @@ class AuthService extends ChangeNotifier {
     try {
       if (_currentUser == null) return;
 
-      await FirebaseRetryService.updateDocument(
-        collection: 'users',
-        documentId: _currentUser!.uid,
-        data: {
-          'onboarding_completed': completed,
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-      );
+      // Use direct Firestore calls for all platforms
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUser!.uid)
+          .update({
+        'onboarding_completed': completed,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
 
       debugPrint('Onboarding completion updated: $completed');
     } catch (e) {
@@ -338,26 +318,19 @@ class AuthService extends ChangeNotifier {
     try {
       if (_currentUser == null) return false;
 
-      // Try cache first, then server
-      DocumentSnapshot userDoc;
-      try {
-        userDoc = await FirebaseRetryService.getDocument(
-          collection: 'users',
-          documentId: _currentUser!.uid,
-          source: Source.cache,
-        );
-      } catch (e) {
-        userDoc = await FirebaseRetryService.getDocument(
-          collection: 'users',
-          documentId: _currentUser!.uid,
-          source: Source.server,
-        );
-      }
+      // Use direct Firestore calls for all platforms
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUser!.uid)
+          .get();
 
       if (!userDoc.exists) return false;
 
-      final data = userDoc.data() as Map<String, dynamic>?;
-      return data?['onboarding_completed'] ?? false;
+      final data = userDoc.data();
+      if (data is Map<String, dynamic>) {
+        return data['onboarding_completed'] ?? false;
+      }
+      return false;
     } catch (e) {
       debugPrint('Error checking onboarding completion: $e');
       return false;
@@ -374,11 +347,11 @@ class AuthService extends ChangeNotifier {
         ...data,
       };
 
-      await FirebaseRetryService.updateDocument(
-        collection: 'users',
-        documentId: _currentUser!.uid,
-        data: updateData,
-      );
+      // Use direct Firestore calls for all platforms
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUser!.uid)
+          .update(updateData);
 
       debugPrint('User data updated successfully');
     } catch (e) {
@@ -392,23 +365,17 @@ class AuthService extends ChangeNotifier {
     try {
       if (_currentUser == null) return null;
 
-      // Try cache first, then server
-      DocumentSnapshot userDoc;
-      try {
-        userDoc = await FirebaseRetryService.getDocument(
-          collection: 'users',
-          documentId: _currentUser!.uid,
-          source: Source.cache,
-        );
-      } catch (e) {
-        userDoc = await FirebaseRetryService.getDocument(
-          collection: 'users',
-          documentId: _currentUser!.uid,
-          source: Source.server,
-        );
-      }
+      // Use direct Firestore calls for all platforms
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUser!.uid)
+          .get();
 
-      return userDoc.data() as Map<String, dynamic>?;
+      final data = userDoc.data();
+      if (data is Map<String, dynamic>) {
+        return data;
+      }
+      return null;
     } catch (e) {
       debugPrint('Error getting user data: $e');
       return null;

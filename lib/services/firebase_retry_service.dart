@@ -22,19 +22,19 @@ class FirebaseRetryService {
 
     while (attempts < maxRetries) {
       try {
-        // Check connectivity if required
-        if (requiresConnectivity && !_connectivity.isOnline) {
+        // Check connectivity if required (skip for web)
+        if (requiresConnectivity && !kIsWeb && !_connectivity.isOnline) {
           debugPrint('$operationName: No internet connection, waiting...');
           await _connectivity.waitForConnectivity(timeout: const Duration(seconds: 30));
         }
 
         // Execute the operation
         final result = await operation();
-        
+
         if (attempts > 0) {
           debugPrint('$operationName: Succeeded after ${attempts + 1} attempts');
         }
-        
+
         return result;
       } catch (e) {
         attempts++;

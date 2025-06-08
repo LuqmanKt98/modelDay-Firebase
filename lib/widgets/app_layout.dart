@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:new_flutter/widgets/sidebar.dart';
 import 'package:new_flutter/widgets/swipe_navigation.dart';
-import 'package:new_flutter/widgets/connectivity_banner.dart';
 import 'package:new_flutter/theme/app_theme.dart';
 
 class AppLayout extends StatefulWidget {
@@ -127,46 +126,44 @@ class _AppLayoutState extends State<AppLayout> {
                         : null,
                   ),
                   child: SafeArea(
-                    child: ConnectivityBanner(
-                      child: Column(
-                        children: [
-                          // Desktop header with title and actions
-                          if (isDesktop)
-                            Container(
-                              padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    widget.title ?? 'ModelLog',
-                                    style: const TextStyle(
-                                      color: AppTheme.goldColor,
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                    child: Column(
+                      children: [
+                        // Desktop header with title and actions
+                        if (isDesktop)
+                          Container(
+                            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  widget.title ?? 'ModelLog',
+                                  style: const TextStyle(
+                                    color: AppTheme.goldColor,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                  if (widget.actions != null)
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: widget.actions!,
-                                    ),
-                                ],
-                              ),
-                            ),
-                          // Main content with swipe navigation
-                          Expanded(
-                            child: SwipeNavigation(
-                              currentRoute: widget.currentPage,
-                              child: Padding(
-                                padding: EdgeInsets.all(
-                                  isDesktop ? 24.0 : (isTablet ? 20.0 : 16.0),
                                 ),
-                                child: widget.child,
-                              ),
+                                if (widget.actions != null)
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: widget.actions!,
+                                  ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
+                        // Main content with swipe navigation
+                        Expanded(
+                          child: SwipeNavigation(
+                            currentRoute: widget.currentPage,
+                            child: Padding(
+                              padding: EdgeInsets.all(
+                                isDesktop ? 24.0 : (isTablet ? 20.0 : 16.0),
+                              ),
+                              child: widget.child,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
