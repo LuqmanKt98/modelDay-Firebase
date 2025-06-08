@@ -18,9 +18,9 @@ class _TestsPageState extends State<TestsPage> {
   List<Test> tests = [];
   bool isLoading = true;
   String? error;
-  String _searchTerm = '';
   String _viewMode = 'grid';
   String _selectedStatus = 'all';
+  final _searchController = TextEditingController();
   final Map<String, bool> _columnVisibility = {
     'date': true,
     'title': true,
@@ -35,6 +35,12 @@ class _TestsPageState extends State<TestsPage> {
   void initState() {
     super.initState();
     _loadTests();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadTests() async {
@@ -463,8 +469,8 @@ class _TestsPageState extends State<TestsPage> {
                   child: ui.Input(
                     prefixIcon: const Icon(Icons.search),
                     hintText: 'Search tests...',
-                    value: _searchTerm,
-                    onChanged: (value) => setState(() => _searchTerm = value),
+                    controller: _searchController,
+                    onChanged: (value) => setState(() {}),
                   ),
                 ),
                 const SizedBox(width: 16),

@@ -20,7 +20,6 @@ class Input extends StatelessWidget {
   final bool enabled;
   final Widget? prefixIcon;
   final String? hintText;
-  final String value;
 
   const Input({
     super.key,
@@ -42,7 +41,6 @@ class Input extends StatelessWidget {
     this.enabled = true,
     this.prefixIcon,
     this.hintText,
-    required this.value,
   });
 
   @override
@@ -59,7 +57,7 @@ class Input extends StatelessWidget {
             ),
           ),
         TextFormField(
-          controller: TextEditingController(text: value),
+          controller: controller,
           onChanged: onChanged,
           obscureText: obscureText,
           keyboardType: keyboardType,
@@ -73,7 +71,7 @@ class Input extends StatelessWidget {
           enabled: enabled,
           decoration: AppTheme.textFieldDecoration.copyWith(
             prefixIcon: prefixIcon,
-            hintText: hintText,
+            hintText: hintText ?? placeholder,
             hintStyle: AppTheme.bodyMedium.copyWith(color: AppTheme.textMuted),
           ),
           style: AppTheme.bodyMedium,

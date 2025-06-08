@@ -166,7 +166,6 @@ class _NewAgentPageState extends State<NewAgentPage> {
                 [
                   ui.Input(
                     label: 'Full Name',
-                    value: _nameController.text,
                     controller: _nameController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -178,7 +177,6 @@ class _NewAgentPageState extends State<NewAgentPage> {
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Email',
-                    value: _emailController.text,
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
@@ -193,14 +191,12 @@ class _NewAgentPageState extends State<NewAgentPage> {
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Phone Number',
-                    value: _phoneController.text,
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
                   ),
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Agency',
-                    value: _agencyController.text,
                     controller: _agencyController,
                   ),
                 ],
@@ -216,7 +212,6 @@ class _NewAgentPageState extends State<NewAgentPage> {
                       Expanded(
                         child: ui.Input(
                           label: 'City',
-                          value: _cityController.text,
                           controller: _cityController,
                         ),
                       ),
@@ -224,7 +219,6 @@ class _NewAgentPageState extends State<NewAgentPage> {
                       Expanded(
                         child: ui.Input(
                           label: 'Country',
-                          value: _countryController.text,
                           controller: _countryController,
                         ),
                       ),
@@ -240,7 +234,6 @@ class _NewAgentPageState extends State<NewAgentPage> {
                 [
                   ui.Input(
                     label: 'Instagram Username (without @)',
-                    value: _instagramController.text,
                     controller: _instagramController,
                   ),
                 ],
@@ -253,7 +246,6 @@ class _NewAgentPageState extends State<NewAgentPage> {
                 [
                   ui.Input(
                     label: 'Notes',
-                    value: _notesController.text,
                     controller: _notesController,
                     maxLines: 3,
                   ),

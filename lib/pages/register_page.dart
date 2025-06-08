@@ -117,7 +117,6 @@ class _RegisterPageState extends State<RegisterPage> {
                   // First Name
                   ui.Input(
                     label: 'First Name',
-                    value: _firstNameController.text,
                     controller: _firstNameController,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
@@ -131,7 +130,6 @@ class _RegisterPageState extends State<RegisterPage> {
                   // Last Name
                   ui.Input(
                     label: 'Last Name',
-                    value: _lastNameController.text,
                     controller: _lastNameController,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
@@ -145,7 +143,6 @@ class _RegisterPageState extends State<RegisterPage> {
                   // Email
                   ui.Input(
                     label: 'Email',
-                    value: _emailController.text,
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
@@ -163,7 +160,6 @@ class _RegisterPageState extends State<RegisterPage> {
                   // Password
                   ui.Input(
                     label: 'Password',
-                    value: _passwordController.text,
                     controller: _passwordController,
                     obscureText: true,
                     validator: (value) {
@@ -181,7 +177,6 @@ class _RegisterPageState extends State<RegisterPage> {
                   // Confirm Password
                   ui.Input(
                     label: 'Confirm Password',
-                    value: _confirmPasswordController.text,
                     controller: _confirmPasswordController,
                     obscureText: true,
                     validator: (value) {

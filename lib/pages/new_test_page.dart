@@ -99,7 +99,6 @@ class _NewTestPageState extends State<NewTestPage> {
             children: [
               ui.Input(
                 label: 'Title',
-                value: _titleController.text,
                 controller: _titleController,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -111,7 +110,6 @@ class _NewTestPageState extends State<NewTestPage> {
               const SizedBox(height: 16),
               ui.Input(
                 label: 'Description',
-                value: _descriptionController.text,
                 controller: _descriptionController,
                 maxLines: 3,
                 validator: (value) {
@@ -148,7 +146,6 @@ class _NewTestPageState extends State<NewTestPage> {
               const SizedBox(height: 16),
               ui.Input(
                 label: 'Location',
-                value: _locationController.text,
                 controller: _locationController,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -160,7 +157,6 @@ class _NewTestPageState extends State<NewTestPage> {
               const SizedBox(height: 16),
               ui.Input(
                 label: 'Requirements',
-                value: _requirementsController.text,
                 controller: _requirementsController,
                 maxLines: 3,
                 validator: (value) {
@@ -177,7 +173,6 @@ class _NewTestPageState extends State<NewTestPage> {
                     flex: 2,
                     child: ui.Input(
                       label: 'Rate',
-                      value: _rateController.text,
                       controller: _rateController,
                       keyboardType: TextInputType.number,
                       validator: (value) {

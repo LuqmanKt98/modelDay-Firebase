@@ -231,7 +231,6 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
                 [
                   ui.Input(
                     label: 'Agency Name',
-                    value: _nameController.text,
                     controller: _nameController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -245,14 +244,12 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Website',
-                    value: _websiteController.text,
                     controller: _websiteController,
                     keyboardType: TextInputType.url,
                   ),
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Address',
-                    value: _addressController.text,
                     controller: _addressController,
                   ),
                   const SizedBox(height: 16),
@@ -261,7 +258,6 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
                       Expanded(
                         child: ui.Input(
                           label: 'City',
-                          value: _cityController.text,
                           controller: _cityController,
                         ),
                       ),
@@ -269,7 +265,6 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
                       Expanded(
                         child: ui.Input(
                           label: 'Country',
-                          value: _countryController.text,
                           controller: _countryController,
                         ),
                       ),
@@ -281,7 +276,6 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
                       Expanded(
                         child: ui.Input(
                           label: 'Commission Rate (%)',
-                          value: _commissionRateController.text,
                           controller: _commissionRateController,
                           keyboardType: TextInputType.number,
                         ),
@@ -302,7 +296,6 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
                 [
                   ui.Input(
                     label: 'Name',
-                    value: _mainBookerNameController.text,
                     controller: _mainBookerNameController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -314,7 +307,6 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Email',
-                    value: _mainBookerEmailController.text,
                     controller: _mainBookerEmailController,
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
@@ -330,7 +322,6 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Phone',
-                    value: _mainBookerPhoneController.text,
                     controller: _mainBookerPhoneController,
                     keyboardType: TextInputType.phone,
                   ),
@@ -344,20 +335,17 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
                 [
                   ui.Input(
                     label: 'Name',
-                    value: _financeNameController.text,
                     controller: _financeNameController,
                   ),
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Email',
-                    value: _financeEmailController.text,
                     controller: _financeEmailController,
                     keyboardType: TextInputType.emailAddress,
                   ),
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Phone',
-                    value: _financePhoneController.text,
                     controller: _financePhoneController,
                     keyboardType: TextInputType.phone,
                   ),
@@ -436,7 +424,6 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
                 [
                   ui.Input(
                     label: 'Notes',
-                    value: _notesController.text,
                     controller: _notesController,
                     maxLines: 3,
                   ),

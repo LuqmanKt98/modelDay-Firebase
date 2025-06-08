@@ -144,7 +144,6 @@ class _NewModelPageState extends State<NewModelPage> {
                 [
                   ui.Input(
                     label: 'Full Name',
-                    value: _nameController.text,
                     controller: _nameController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -156,7 +155,6 @@ class _NewModelPageState extends State<NewModelPage> {
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Email',
-                    value: _emailController.text,
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
@@ -171,7 +169,6 @@ class _NewModelPageState extends State<NewModelPage> {
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Phone Number',
-                    value: _phoneController.text,
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
                   ),
@@ -196,7 +193,6 @@ class _NewModelPageState extends State<NewModelPage> {
                       Expanded(
                         child: ui.Input(
                           label: 'Height (cm)',
-                          value: _heightController.text,
                           controller: _heightController,
                           keyboardType: TextInputType.number,
                         ),
@@ -205,7 +201,6 @@ class _NewModelPageState extends State<NewModelPage> {
                       Expanded(
                         child: ui.Input(
                           label: 'Weight (kg)',
-                          value: _weightController.text,
                           controller: _weightController,
                           keyboardType: TextInputType.number,
                         ),
@@ -218,7 +213,6 @@ class _NewModelPageState extends State<NewModelPage> {
                       Expanded(
                         child: ui.Input(
                           label: 'Bust (cm)',
-                          value: _bustController.text,
                           controller: _bustController,
                           keyboardType: TextInputType.number,
                         ),
@@ -227,7 +221,6 @@ class _NewModelPageState extends State<NewModelPage> {
                       Expanded(
                         child: ui.Input(
                           label: 'Waist (cm)',
-                          value: _waistController.text,
                           controller: _waistController,
                           keyboardType: TextInputType.number,
                         ),
@@ -236,7 +229,6 @@ class _NewModelPageState extends State<NewModelPage> {
                       Expanded(
                         child: ui.Input(
                           label: 'Hips (cm)',
-                          value: _hipsController.text,
                           controller: _hipsController,
                           keyboardType: TextInputType.number,
                         ),
@@ -249,7 +241,6 @@ class _NewModelPageState extends State<NewModelPage> {
                       Expanded(
                         child: ui.Input(
                           label: 'Shoe Size',
-                          value: _shoeSizeController.text,
                           controller: _shoeSizeController,
                         ),
                       ),
@@ -257,7 +248,6 @@ class _NewModelPageState extends State<NewModelPage> {
                       Expanded(
                         child: ui.Input(
                           label: 'Hair Color',
-                          value: _hairColorController.text,
                           controller: _hairColorController,
                         ),
                       ),
@@ -265,7 +255,6 @@ class _NewModelPageState extends State<NewModelPage> {
                       Expanded(
                         child: ui.Input(
                           label: 'Eye Color',
-                          value: _eyeColorController.text,
                           controller: _eyeColorController,
                         ),
                       ),
@@ -281,26 +270,22 @@ class _NewModelPageState extends State<NewModelPage> {
                 [
                   ui.Input(
                     label: 'Agency',
-                    value: _agencyController.text,
                     controller: _agencyController,
                   ),
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Instagram Username (without @)',
-                    value: _instagramController.text,
                     controller: _instagramController,
                   ),
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Portfolio Website',
-                    value: _portfolioController.text,
                     controller: _portfolioController,
                     keyboardType: TextInputType.url,
                   ),
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Experience',
-                    value: _experienceController.text,
                     controller: _experienceController,
                     maxLines: 3,
                   ),
@@ -314,7 +299,6 @@ class _NewModelPageState extends State<NewModelPage> {
                 [
                   ui.Input(
                     label: 'Additional Notes',
-                    value: _notesController.text,
                     controller: _notesController,
                     maxLines: 3,
                   ),

@@ -312,7 +312,6 @@ class _NewAiJobPageState extends State<NewAiJobPage> {
                 [
                   ui.Input(
                     label: 'Client Name',
-                    value: _clientNameController.text,
                     controller: _clientNameController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -326,14 +325,12 @@ class _NewAiJobPageState extends State<NewAiJobPage> {
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Description',
-                    value: _descriptionController.text,
                     controller: _descriptionController,
                     maxLines: 3,
                   ),
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Location',
-                    value: _locationController.text,
                     controller: _locationController,
                   ),
                 ],
@@ -370,7 +367,6 @@ class _NewAiJobPageState extends State<NewAiJobPage> {
                 [
                   ui.Input(
                     label: 'Booking Agent',
-                    value: _bookingAgentController.text,
                     controller: _bookingAgentController,
                   ),
                 ],
@@ -383,7 +379,6 @@ class _NewAiJobPageState extends State<NewAiJobPage> {
                 [
                   ui.Input(
                     label: 'Notes',
-                    value: _notesController.text,
                     controller: _notesController,
                     maxLines: 3,
                   ),
@@ -627,7 +622,6 @@ class _NewAiJobPageState extends State<NewAiJobPage> {
           flex: 2,
           child: ui.Input(
             label: 'Rate',
-            value: _rateController.text,
             controller: _rateController,
             keyboardType: TextInputType.number,
           ),

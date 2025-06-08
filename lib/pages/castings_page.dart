@@ -16,12 +16,18 @@ class _CastingsPageState extends State<CastingsPage> {
   List<Casting> castings = [];
   bool isLoading = true;
   String? error;
-  String _searchTerm = '';
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadCastings();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadCastings() async {
@@ -247,8 +253,8 @@ class _CastingsPageState extends State<CastingsPage> {
             ui.Input(
               prefixIcon: const Icon(Icons.search),
               hintText: 'Search castings...',
-              value: _searchTerm,
-              onChanged: (value) => setState(() => _searchTerm = value),
+              controller: _searchController,
+              onChanged: (value) => setState(() {}),
             ),
             const SizedBox(height: 16),
             Expanded(

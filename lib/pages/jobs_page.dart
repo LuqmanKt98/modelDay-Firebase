@@ -36,10 +36,10 @@ class _JobsPageState extends State<JobsPage> {
   List<Job> jobs = [];
   bool isLoading = true;
   String? error;
-  String _searchTerm = '';
   String _viewMode = 'grid';
   String _sortOrder = 'date-desc';
   String _selectedStatus = 'all';
+  final _searchController = TextEditingController();
   final Map<String, bool> _columnVisibility = {
     'date': true,
     'client_name': true,
@@ -58,6 +58,12 @@ class _JobsPageState extends State<JobsPage> {
   void initState() {
     super.initState();
     _loadJobs();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadJobs() async {
@@ -726,9 +732,9 @@ class _JobsPageState extends State<JobsPage> {
                       ui.Input(
                         prefixIcon: const Icon(Icons.search),
                         hintText: 'Search jobs...',
-                        value: _searchTerm,
+                        controller: _searchController,
                         onChanged: (value) =>
-                            setState(() => _searchTerm = value),
+                            setState(() {}),
                       ),
                       const SizedBox(height: 12),
                       Row(
@@ -774,9 +780,9 @@ class _JobsPageState extends State<JobsPage> {
                       child: ui.Input(
                         prefixIcon: const Icon(Icons.search),
                         hintText: 'Search jobs...',
-                        value: _searchTerm,
+                        controller: _searchController,
                         onChanged: (value) =>
-                            setState(() => _searchTerm = value),
+                            setState(() {}),
                       ),
                     ),
                     const SizedBox(width: 16),

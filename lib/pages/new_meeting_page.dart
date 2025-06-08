@@ -298,7 +298,6 @@ class _NewMeetingPageState extends State<NewMeetingPage> {
                 [
                   ui.Input(
                     label: 'Meeting Name',
-                    value: _meetingNameController.text,
                     controller: _meetingNameController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -312,7 +311,6 @@ class _NewMeetingPageState extends State<NewMeetingPage> {
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Location',
-                    value: _locationController.text,
                     controller: _locationController,
                   ),
                 ],
@@ -338,7 +336,6 @@ class _NewMeetingPageState extends State<NewMeetingPage> {
                 [
                   ui.Input(
                     label: 'Notes',
-                    value: _notesController.text,
                     controller: _notesController,
                     maxLines: 3,
                   ),
@@ -420,7 +417,6 @@ class _NewMeetingPageState extends State<NewMeetingPage> {
               Expanded(
                 child: ui.Input(
                   label: 'Custom Meeting Type',
-                  value: _customTypeController.text,
                   controller: _customTypeController,
                   validator: (value) {
                     if (value == null || value.isEmpty) {

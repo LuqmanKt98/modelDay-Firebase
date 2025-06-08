@@ -385,7 +385,6 @@ class _NewEventPageState extends State<NewEventPage> {
     if (_needsClientName()) {
       fields.addAll([
         ui.Input(
-          value: _clientNameController.text,
           controller: _clientNameController,
           placeholder: 'Client name *',
           validator: (value) {
@@ -415,7 +414,6 @@ class _NewEventPageState extends State<NewEventPage> {
       fields.addAll([
         const SizedBox(height: 16),
         ui.Input(
-          value: _locationController.text,
           controller: _locationController,
           placeholder: 'Location',
         ),
@@ -444,7 +442,6 @@ class _NewEventPageState extends State<NewEventPage> {
     fields.addAll([
       const SizedBox(height: 24),
       ui.Input(
-        value: _notesController.text,
         controller: _notesController,
         placeholder: 'Notes (optional)',
         maxLines: 3,
@@ -533,7 +530,6 @@ class _NewEventPageState extends State<NewEventPage> {
       const SizedBox(height: 16),
       if (_selectedOptionType == 'Add manually') ...[
         ui.Input(
-          value: _customTypeController.text,
           controller: _customTypeController,
           placeholder: 'Enter custom option type',
           validator: (value) {
@@ -571,7 +567,6 @@ class _NewEventPageState extends State<NewEventPage> {
       const SizedBox(height: 16),
       if (_selectedJobType == 'Add manually') ...[
         ui.Input(
-          value: _customTypeController.text,
           controller: _customTypeController,
           placeholder: 'Enter custom job type',
           validator: (value) {
@@ -1001,7 +996,6 @@ class _NewEventPageState extends State<NewEventPage> {
       const SizedBox(height: 16),
       if (_selectedJobType == 'Add manually') ...[
         ui.Input(
-          value: _customTypeController.text,
           controller: _customTypeController,
           placeholder: 'Enter custom job type',
           validator: (value) {
@@ -1019,7 +1013,6 @@ class _NewEventPageState extends State<NewEventPage> {
   List<Widget> _buildTestFields() {
     return [
       ui.Input(
-        value: _photographerController.text,
         controller: _photographerController,
         placeholder: 'Photographer name *',
         validator: (value) {
@@ -1119,7 +1112,6 @@ class _NewEventPageState extends State<NewEventPage> {
   List<Widget> _buildMeetingFields() {
     return [
       ui.Input(
-        value: _subjectController.text,
         controller: _subjectController,
         placeholder: 'Subject *',
         validator: (value) {
@@ -1131,7 +1123,6 @@ class _NewEventPageState extends State<NewEventPage> {
       ),
       const SizedBox(height: 16),
       ui.Input(
-        value: _industryContactController.text,
         controller: _industryContactController,
         placeholder: 'Industry contact',
       ),
@@ -1141,7 +1132,6 @@ class _NewEventPageState extends State<NewEventPage> {
   List<Widget> _buildOtherFields() {
     return [
       ui.Input(
-        value: _eventNameController.text,
         controller: _eventNameController,
         placeholder: 'Event name *',
         validator: (value) {
@@ -1157,7 +1147,6 @@ class _NewEventPageState extends State<NewEventPage> {
   List<Widget> _buildOnStayFields() {
     return [
       ui.Input(
-        value: _agencyNameController.text,
         controller: _agencyNameController,
         placeholder: 'Agency name *',
         validator: (value) {
@@ -1169,13 +1158,11 @@ class _NewEventPageState extends State<NewEventPage> {
       ),
       const SizedBox(height: 16),
       ui.Input(
-        value: _agencyAddressController.text,
         controller: _agencyAddressController,
         placeholder: 'Agency address',
       ),
       const SizedBox(height: 16),
       ui.Input(
-        value: _hotelAddressController.text,
         controller: _hotelAddressController,
         placeholder: 'Hotel/Apartment address',
       ),

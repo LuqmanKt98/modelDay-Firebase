@@ -301,7 +301,6 @@ class _NewJobPageState extends State<NewJobPage> {
             children: [
               ui.Input(
                 label: 'Client Name',
-                value: _clientNameController.text,
                 controller: _clientNameController,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -327,7 +326,6 @@ class _NewJobPageState extends State<NewJobPage> {
                   children: [
                     Expanded(
                       child: ui.Input(
-                        value: _customJobTypeController.text,
                         controller: _customJobTypeController,
                         placeholder: 'Enter custom job type',
                         validator: (value) {
@@ -432,7 +430,6 @@ class _NewJobPageState extends State<NewJobPage> {
               const SizedBox(height: 16),
               ui.Input(
                 label: 'Location',
-                value: _locationController.text,
                 controller: _locationController,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -444,7 +441,6 @@ class _NewJobPageState extends State<NewJobPage> {
               const SizedBox(height: 16),
               ui.Input(
                 label: 'Notes',
-                value: _notesController.text,
                 controller: _notesController,
                 maxLines: 3,
               ),
@@ -455,7 +451,6 @@ class _NewJobPageState extends State<NewJobPage> {
                     flex: 2,
                     child: ui.Input(
                       label: 'Rate',
-                      value: _rateController.text,
                       controller: _rateController,
                       keyboardType: TextInputType.number,
                       validator: (value) {
@@ -861,7 +856,6 @@ class _NewJobPageState extends State<NewJobPage> {
 
               // Notes
               ui.Input(
-                value: _notesController.text,
                 controller: _notesController,
                 placeholder: 'Additional notes (optional)',
                 maxLines: 3,

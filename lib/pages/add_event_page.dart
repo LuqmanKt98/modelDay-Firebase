@@ -245,7 +245,6 @@ class _AddEventPageState extends State<AddEventPage> {
               // Client Name
               ui.Input(
                 label: 'Client Name',
-                value: _clientNameController.text,
                 controller: _clientNameController,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -339,7 +338,6 @@ class _AddEventPageState extends State<AddEventPage> {
                       Expanded(
                         child: ui.Input(
                           label: 'Custom Event Type',
-                          value: _customTypeController.text,
                           controller: _customTypeController,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -578,7 +576,6 @@ class _AddEventPageState extends State<AddEventPage> {
               // Location
               ui.Input(
                 label: 'Location',
-                value: _locationController.text,
                 controller: _locationController,
               ),
               const SizedBox(height: 16),
@@ -590,7 +587,6 @@ class _AddEventPageState extends State<AddEventPage> {
                     flex: 2,
                     child: ui.Input(
                       label: 'Rate',
-                      value: _rateController.text,
                       controller: _rateController,
                       keyboardType: TextInputType.number,
                     ),
@@ -650,7 +646,6 @@ class _AddEventPageState extends State<AddEventPage> {
               // Notes
               ui.Input(
                 label: 'Notes',
-                value: _notesController.text,
                 controller: _notesController,
                 maxLines: 3,
               ),

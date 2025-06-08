@@ -17,10 +17,18 @@ class _JobsPageSimpleState extends State<JobsPageSimple> {
   bool isLoading = true;
   String? error;
   String _searchTerm = '';
+  final _searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     _loadJobs();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadJobs() async {
@@ -253,7 +261,7 @@ class _JobsPageSimpleState extends State<JobsPageSimple> {
               Expanded(
                 child: ui.Input(
                   placeholder: 'Search jobs...',
-                  value: _searchTerm,
+                  controller: _searchController,
                   onChanged: (value) {
                     setState(() {
                       _searchTerm = value;

@@ -297,7 +297,6 @@ class _NewPolaroidPageState extends State<NewPolaroidPage> {
                 [
                   ui.Input(
                     label: 'Client Name',
-                    value: _clientNameController.text,
                     controller: _clientNameController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -311,7 +310,6 @@ class _NewPolaroidPageState extends State<NewPolaroidPage> {
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Location',
-                    value: _locationController.text,
                     controller: _locationController,
                   ),
                 ],
@@ -337,7 +335,6 @@ class _NewPolaroidPageState extends State<NewPolaroidPage> {
                 [
                   ui.Input(
                     label: 'Notes',
-                    value: _notesController.text,
                     controller: _notesController,
                     maxLines: 3,
                   ),
@@ -419,7 +416,6 @@ class _NewPolaroidPageState extends State<NewPolaroidPage> {
               Expanded(
                 child: ui.Input(
                   label: 'Custom Session Type',
-                  value: _customTypeController.text,
                   controller: _customTypeController,
                   validator: (value) {
                     if (value == null || value.isEmpty) {

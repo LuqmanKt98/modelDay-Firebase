@@ -21,11 +21,18 @@ class _IndustryContactsPageState extends State<IndustryContactsPage> {
   List<IndustryContact> _contacts = [];
   String _searchTerm = '';
   final IndustryContactsService _contactsService = IndustryContactsService();
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadContacts();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadContacts() async {
@@ -380,7 +387,7 @@ class _IndustryContactsPageState extends State<IndustryContactsPage> {
                   child: ui.Input(
                     prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
                     hintText: 'Search contacts...',
-                    value: _searchTerm,
+                    controller: _searchController,
                     onChanged: (value) => setState(() => _searchTerm = value),
                   ),
                 ),

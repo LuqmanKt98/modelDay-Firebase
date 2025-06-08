@@ -20,11 +20,18 @@ class _AgenciesPageState extends State<AgenciesPage> {
   String? _error;
   List<Agency> _agencies = [];
   String _searchTerm = '';
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadAgencies();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadAgencies() async {
@@ -430,7 +437,7 @@ class _AgenciesPageState extends State<AgenciesPage> {
                   child: ui.Input(
                     prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
                     hintText: 'Search agencies...',
-                    value: _searchTerm,
+                    controller: _searchController,
                     onChanged: (value) => setState(() => _searchTerm = value),
                   ),
                 ),

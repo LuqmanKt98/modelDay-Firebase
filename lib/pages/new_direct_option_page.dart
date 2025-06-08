@@ -360,7 +360,6 @@ class _NewDirectOptionPageState extends State<NewDirectOptionPage> {
                 [
                   ui.Input(
                     label: 'Client Name',
-                    value: _clientNameController.text,
                     controller: _clientNameController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -374,7 +373,6 @@ class _NewDirectOptionPageState extends State<NewDirectOptionPage> {
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Location',
-                    value: _locationController.text,
                     controller: _locationController,
                   ),
                 ],
@@ -413,14 +411,12 @@ class _NewDirectOptionPageState extends State<NewDirectOptionPage> {
                 [
                   ui.Input(
                     label: 'Phone',
-                    value: _phoneController.text,
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
                   ),
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Email',
-                    value: _emailController.text,
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                   ),
@@ -434,7 +430,6 @@ class _NewDirectOptionPageState extends State<NewDirectOptionPage> {
                 [
                   ui.Input(
                     label: 'Notes',
-                    value: _notesController.text,
                     controller: _notesController,
                     maxLines: 3,
                   ),
@@ -516,7 +511,6 @@ class _NewDirectOptionPageState extends State<NewDirectOptionPage> {
               Expanded(
                 child: ui.Input(
                   label: 'Custom Option Type',
-                  value: _customTypeController.text,
                   controller: _customTypeController,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -800,7 +794,6 @@ class _NewDirectOptionPageState extends State<NewDirectOptionPage> {
           flex: 2,
           child: ui.Input(
             label: 'Rate',
-            value: _rateController.text,
             controller: _rateController,
             keyboardType: TextInputType.number,
           ),
@@ -913,7 +906,6 @@ class _NewDirectOptionPageState extends State<NewDirectOptionPage> {
             Expanded(
               child: ui.Input(
                 label: 'Agency Fee (%)',
-                value: _agencyFeeController.text,
                 controller: _agencyFeeController,
                 keyboardType: TextInputType.number,
               ),
@@ -922,7 +914,6 @@ class _NewDirectOptionPageState extends State<NewDirectOptionPage> {
             Expanded(
               child: ui.Input(
                 label: 'Tax (%)',
-                value: _taxController.text,
                 controller: _taxController,
                 keyboardType: TextInputType.number,
               ),
@@ -935,7 +926,6 @@ class _NewDirectOptionPageState extends State<NewDirectOptionPage> {
             Expanded(
               child: ui.Input(
                 label: 'Additional Fees',
-                value: _additionalFeesController.text,
                 controller: _additionalFeesController,
                 keyboardType: TextInputType.number,
               ),
@@ -944,7 +934,6 @@ class _NewDirectOptionPageState extends State<NewDirectOptionPage> {
             Expanded(
               child: ui.Input(
                 label: 'Extra Hours',
-                value: _extraHoursController.text,
                 controller: _extraHoursController,
                 keyboardType: TextInputType.number,
               ),

@@ -207,7 +207,6 @@ class _NewIndustryContactPageState extends State<NewIndustryContactPage> {
                 [
                   ui.Input(
                     label: 'Full Name',
-                    value: _nameController.text,
                     controller: _nameController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -221,7 +220,6 @@ class _NewIndustryContactPageState extends State<NewIndustryContactPage> {
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Company',
-                    value: _companyController.text,
                     controller: _companyController,
                   ),
                 ],
@@ -234,7 +232,6 @@ class _NewIndustryContactPageState extends State<NewIndustryContactPage> {
                 [
                   ui.Input(
                     label: 'Email',
-                    value: _emailController.text,
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
@@ -249,14 +246,12 @@ class _NewIndustryContactPageState extends State<NewIndustryContactPage> {
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Mobile Phone',
-                    value: _mobileController.text,
                     controller: _mobileController,
                     keyboardType: TextInputType.phone,
                   ),
                   const SizedBox(height: 16),
                   ui.Input(
                     label: 'Instagram Username (without @)',
-                    value: _instagramController.text,
                     controller: _instagramController,
                   ),
                 ],
@@ -272,7 +267,6 @@ class _NewIndustryContactPageState extends State<NewIndustryContactPage> {
                       Expanded(
                         child: ui.Input(
                           label: 'City',
-                          value: _cityController.text,
                           controller: _cityController,
                         ),
                       ),
@@ -280,7 +274,6 @@ class _NewIndustryContactPageState extends State<NewIndustryContactPage> {
                       Expanded(
                         child: ui.Input(
                           label: 'Country',
-                          value: _countryController.text,
                           controller: _countryController,
                         ),
                       ),
@@ -296,7 +289,6 @@ class _NewIndustryContactPageState extends State<NewIndustryContactPage> {
                 [
                   ui.Input(
                     label: 'Notes',
-                    value: _notesController.text,
                     controller: _notesController,
                     maxLines: 3,
                   ),
@@ -378,7 +370,6 @@ class _NewIndustryContactPageState extends State<NewIndustryContactPage> {
               Expanded(
                 child: ui.Input(
                   label: 'Custom Job Title',
-                  value: _customJobTitleController.text,
                   controller: _customJobTitleController,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
