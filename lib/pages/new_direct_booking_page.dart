@@ -440,7 +440,7 @@ class _NewDirectBookingPageState extends State<NewDirectBookingPage> {
         ),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
-          value: value,
+          value: value != null && items.contains(value) ? value : null,
           onChanged: onChanged,
           style: const TextStyle(color: Colors.white),
           dropdownColor: const Color(0xFF2A2A2A),

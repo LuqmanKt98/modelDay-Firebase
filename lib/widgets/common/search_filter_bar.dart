@@ -152,7 +152,9 @@ class SearchFilterBar extends StatelessWidget {
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
-          value: selectedFilter,
+          value: selectedFilter != null && filterOptions!.any((option) => option.value == selectedFilter)
+              ? selectedFilter
+              : null,
           hint: const Text('Filter', style: AppTheme.bodyMedium),
           icon: const Icon(Icons.filter_list, color: AppTheme.textMuted),
           dropdownColor: AppTheme.surfaceColor,
@@ -179,7 +181,9 @@ class SearchFilterBar extends StatelessWidget {
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
-          value: selectedSort,
+          value: selectedSort != null && sortOptions!.any((option) => option.value == selectedSort)
+              ? selectedSort
+              : null,
           hint: const Text('Sort', style: AppTheme.bodyMedium),
           icon: const Icon(Icons.sort, color: AppTheme.textMuted),
           dropdownColor: AppTheme.surfaceColor,

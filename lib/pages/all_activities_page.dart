@@ -59,10 +59,12 @@ class _AllActivitiesPageState extends State<AllActivitiesPage> {
 
   Future<void> _loadActivities() async {
     try {
-      setState(() {
-        _isLoading = true;
-        _error = null;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+          _error = null;
+        });
+      }
 
       final jobs = await JobsService.list();
       final castings = await Casting.list();
@@ -90,15 +92,19 @@ class _AllActivitiesPageState extends State<AllActivitiesPage> {
         }
       });
 
-      setState(() {
-        _activities = activities;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _activities = activities;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _error = 'Failed to load activities: $e';
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to load activities: $e';
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -610,7 +616,7 @@ class _AllActivitiesPageState extends State<AllActivitiesPage> {
   Widget _buildFilterDropdown(String label, String value, List<String> items,
       Function(String?) onChanged) {
     return DropdownButtonFormField<String>(
-      value: value,
+      value: items.contains(value) ? value : (items.isNotEmpty ? items.first : null),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: AppTheme.goldColor),

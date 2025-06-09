@@ -541,7 +541,9 @@ class _NewDirectOptionPageState extends State<NewDirectOptionPage> {
               border: Border.all(color: const Color(0xFF2E2E2E)),
             ),
             child: DropdownButtonFormField<String>(
-              value: _selectedOptionType.isEmpty ? null : _selectedOptionType,
+              value: _selectedOptionType.isNotEmpty && _optionTypes.contains(_selectedOptionType)
+                  ? _selectedOptionType
+                  : null,
               decoration: const InputDecoration(
                 border: InputBorder.none,
                 contentPadding:
@@ -759,7 +761,7 @@ class _NewDirectOptionPageState extends State<NewDirectOptionPage> {
             border: Border.all(color: const Color(0xFF2E2E2E)),
           ),
           child: DropdownButtonFormField<String>(
-            value: _selectedStatus,
+            value: _statusOptions.contains(_selectedStatus) ? _selectedStatus : 'option',
             decoration: const InputDecoration(
               border: InputBorder.none,
               contentPadding:
@@ -819,7 +821,7 @@ class _NewDirectOptionPageState extends State<NewDirectOptionPage> {
                   border: Border.all(color: const Color(0xFF2E2E2E)),
                 ),
                 child: DropdownButtonFormField<String>(
-                  value: _selectedCurrency,
+                  value: _currencies.contains(_selectedCurrency) ? _selectedCurrency : 'USD',
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     contentPadding:
@@ -870,7 +872,7 @@ class _NewDirectOptionPageState extends State<NewDirectOptionPage> {
             border: Border.all(color: const Color(0xFF2E2E2E)),
           ),
           child: DropdownButtonFormField<String>(
-            value: _selectedPaymentStatus,
+            value: _paymentStatusOptions.contains(_selectedPaymentStatus) ? _selectedPaymentStatus : 'unpaid',
             decoration: const InputDecoration(
               border: InputBorder.none,
               contentPadding:

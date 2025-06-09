@@ -462,7 +462,7 @@ class _CalendarPageState extends State<CalendarPage> {
         IconButton(
           icon: const Icon(Icons.add, color: Colors.white),
           onPressed: () {
-            Navigator.pushNamed(context, '/add-event');
+            Navigator.pushNamed(context, '/new-event');
           },
           tooltip: 'Add Event',
         ),

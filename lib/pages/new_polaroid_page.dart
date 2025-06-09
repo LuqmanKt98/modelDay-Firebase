@@ -446,7 +446,9 @@ class _NewPolaroidPageState extends State<NewPolaroidPage> {
               border: Border.all(color: const Color(0xFF2E2E2E)),
             ),
             child: DropdownButtonFormField<String>(
-              value: _selectedSessionType.isEmpty ? null : _selectedSessionType,
+              value: _selectedSessionType.isNotEmpty && _sessionTypes.contains(_selectedSessionType)
+                  ? _selectedSessionType
+                  : null,
               decoration: const InputDecoration(
                 border: InputBorder.none,
                 contentPadding:
@@ -638,7 +640,7 @@ class _NewPolaroidPageState extends State<NewPolaroidPage> {
             border: Border.all(color: const Color(0xFF2E2E2E)),
           ),
           child: DropdownButtonFormField<String>(
-            value: _selectedStatus,
+            value: _statusOptions.contains(_selectedStatus) ? _selectedStatus : null,
             decoration: const InputDecoration(
               border: InputBorder.none,
               contentPadding:

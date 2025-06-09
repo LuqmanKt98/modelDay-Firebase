@@ -35,6 +35,9 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
 
+  # Material Icons
+  material_design_icons_flutter: ^7.0.7296
+
   # State Management
   provider: ^6.1.2
 
@@ -47,7 +50,6 @@ dependencies:
   url_launcher: ^6.3.1
 
   # UI Components
-  google_fonts: ^6.2.1
   flutter_svg: ^2.0.10+1
   cached_network_image: ^3.3.1
   flutter_animate: ^4.5.0

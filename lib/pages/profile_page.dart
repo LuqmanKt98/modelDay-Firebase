@@ -347,10 +347,10 @@ class _ProfilePageState extends State<ProfilePage> {
           child: CircleAvatar(
             radius: 57,
             backgroundColor: Colors.grey[800],
-            backgroundImage: user?.userMetadata?['avatar_url'] != null
-                ? NetworkImage(user.userMetadata['avatar_url'])
+            backgroundImage: user?.photoURL != null
+                ? NetworkImage(user!.photoURL!)
                 : null,
-            child: user?.userMetadata?['avatar_url'] == null
+            child: user?.photoURL == null
                 ? Icon(
                     Icons.person,
                     size: 50,
@@ -361,7 +361,7 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         const SizedBox(height: 16),
         Text(
-          user?.userMetadata?['full_name'] ?? user?.email ?? 'User',
+          user?.displayName ?? user?.email ?? 'User',
           style: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,

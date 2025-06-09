@@ -180,9 +180,9 @@ class _NewOnStayPageState extends State<NewOnStayPage> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _stayTypeController.text.isEmpty
-                  ? null
-                  : _stayTypeController.text,
+              value: _stayTypeController.text.isNotEmpty && _stayTypes.contains(_stayTypeController.text)
+                  ? _stayTypeController.text
+                  : null,
               decoration: const InputDecoration(
                 labelText: 'Stay Type',
                 border: OutlineInputBorder(),
@@ -355,7 +355,7 @@ class _NewOnStayPageState extends State<NewOnStayPage> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _currency,
+                    value: _currencies.contains(_currency) ? _currency : null,
                     decoration: const InputDecoration(
                       labelText: 'Currency',
                       border: OutlineInputBorder(),
@@ -462,7 +462,7 @@ class _NewOnStayPageState extends State<NewOnStayPage> {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _status,
+                    value: _statuses.contains(_status) ? _status : null,
                     decoration: const InputDecoration(
                       labelText: 'Status',
                       border: OutlineInputBorder(),
@@ -483,7 +483,7 @@ class _NewOnStayPageState extends State<NewOnStayPage> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    value: _paymentStatus,
+                    value: _paymentStatuses.contains(_paymentStatus) ? _paymentStatus : null,
                     decoration: const InputDecoration(
                       labelText: 'Payment Status',
                       border: OutlineInputBorder(),

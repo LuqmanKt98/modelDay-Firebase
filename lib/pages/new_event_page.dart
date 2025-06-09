@@ -7,6 +7,7 @@ import 'package:new_flutter/models/agent.dart';
 import 'package:new_flutter/widgets/app_layout.dart';
 import 'package:new_flutter/widgets/ui/input.dart' as ui;
 import 'package:new_flutter/widgets/ui/button.dart';
+import 'package:new_flutter/widgets/ui/safe_dropdown.dart';
 import 'package:new_flutter/theme/app_theme.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
@@ -57,16 +58,19 @@ class _NewEventPageState extends State<NewEventPage> {
   List<Agent> _agents = [];
   final List<PlatformFile> _selectedFiles = [];
   bool _isLoading = false;
+  bool _isLoadingAgents = true;
   bool _isDateRange = false;
   bool _isPaid = false;
   bool _hasPocketMoney = false;
   String? _error;
 
   // Job Types for casting/test
-  String _selectedJobType = 'Add manually';
-  String _selectedOptionType = 'Add manually';
+  String? _selectedJobType;
+  String? _selectedOptionType;
   String _selectedTestType = 'Free';
   String _selectedPolaroidType = 'Free';
+  bool _isCustomJobType = false;
+  bool _isCustomOptionType = false;
 
   // Currencies
   final List<String> _currencies = [
@@ -96,6 +100,11 @@ class _NewEventPageState extends State<NewEventPage> {
   void initState() {
     super.initState();
     _loadAgents();
+
+    // Ensure initial values are valid
+    if (!_currencies.contains(_selectedCurrency)) {
+      _selectedCurrency = _currencies.first;
+    }
   }
 
   @override
@@ -125,10 +134,16 @@ class _NewEventPageState extends State<NewEventPage> {
       if (mounted) {
         setState(() {
           _agents = agents;
+          _isLoadingAgents = false;
         });
       }
     } catch (e) {
       debugPrint('Error loading agents: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingAgents = false;
+        });
+      }
     }
   }
 
@@ -273,17 +288,17 @@ class _NewEventPageState extends State<NewEventPage> {
     switch (widget.eventType) {
       case EventType.option:
       case EventType.directOption:
-        data['option_type'] = _selectedOptionType;
+        data['option_type'] = _isCustomOptionType ? _customTypeController.text : _selectedOptionType;
         data['option_status'] = _selectedOptionStatus.toString().split('.').last;
         break;
-        
+
       case EventType.job:
       case EventType.directBooking:
-        data['job_type'] = _selectedJobType == 'Add manually' ? _customTypeController.text : _selectedJobType;
+        data['job_type'] = _isCustomJobType ? _customTypeController.text : _selectedJobType;
         break;
-        
+
       case EventType.casting:
-        data['job_type'] = _selectedJobType == 'Add manually' ? _customTypeController.text : _selectedJobType;
+        data['job_type'] = _isCustomJobType ? _customTypeController.text : _selectedJobType;
         break;
         
       case EventType.test:
@@ -509,31 +524,38 @@ class _NewEventPageState extends State<NewEventPage> {
 
   List<Widget> _buildOptionFields() {
     return [
-      DropdownButtonFormField<String>(
-        decoration: const InputDecoration(
-          labelText: 'Option Type',
-          border: OutlineInputBorder(),
-        ),
+      SafeDropdown(
         value: _selectedOptionType,
-        items: _jobTypes.map((type) {
-          return DropdownMenuItem(
-            value: type,
-            child: Text(type),
-          );
-        }).toList(),
+        items: _jobTypes,
+        labelText: 'Option Type',
+        hintText: 'Select option type',
         onChanged: (value) {
-          setState(() {
-            _selectedOptionType = value!;
-          });
+          if (value == 'Add manually') {
+            setState(() {
+              _isCustomOptionType = true;
+              _selectedOptionType = null;
+            });
+          } else {
+            setState(() {
+              _isCustomOptionType = false;
+              _selectedOptionType = value;
+            });
+          }
+        },
+        validator: (value) {
+          if (!_isCustomOptionType && (value == null || value.isEmpty)) {
+            return 'Option type is required';
+          }
+          return null;
         },
       ),
       const SizedBox(height: 16),
-      if (_selectedOptionType == 'Add manually') ...[
+      if (_isCustomOptionType) ...[
         ui.Input(
           controller: _customTypeController,
           placeholder: 'Enter custom option type',
           validator: (value) {
-            if (_selectedOptionType == 'Add manually' && (value == null || value.trim().isEmpty)) {
+            if (_isCustomOptionType && (value == null || value.trim().isEmpty)) {
               return 'Option type is required';
             }
             return null;
@@ -546,31 +568,38 @@ class _NewEventPageState extends State<NewEventPage> {
 
   List<Widget> _buildJobFields() {
     return [
-      DropdownButtonFormField<String>(
-        decoration: const InputDecoration(
-          labelText: 'Job Type',
-          border: OutlineInputBorder(),
-        ),
+      SafeDropdown(
         value: _selectedJobType,
-        items: _jobTypes.map((type) {
-          return DropdownMenuItem(
-            value: type,
-            child: Text(type),
-          );
-        }).toList(),
+        items: _jobTypes,
+        labelText: 'Job Type',
+        hintText: 'Select job type',
         onChanged: (value) {
-          setState(() {
-            _selectedJobType = value!;
-          });
+          if (value == 'Add manually') {
+            setState(() {
+              _isCustomJobType = true;
+              _selectedJobType = null;
+            });
+          } else {
+            setState(() {
+              _isCustomJobType = false;
+              _selectedJobType = value;
+            });
+          }
+        },
+        validator: (value) {
+          if (!_isCustomJobType && (value == null || value.isEmpty)) {
+            return 'Job type is required';
+          }
+          return null;
         },
       ),
       const SizedBox(height: 16),
-      if (_selectedJobType == 'Add manually') ...[
+      if (_isCustomJobType) ...[
         ui.Input(
           controller: _customTypeController,
           placeholder: 'Enter custom job type',
           validator: (value) {
-            if (_selectedJobType == 'Add manually' && (value == null || value.trim().isEmpty)) {
+            if (_isCustomJobType && (value == null || value.trim().isEmpty)) {
               return 'Job type is required';
             }
             return null;
@@ -725,36 +754,49 @@ class _NewEventPageState extends State<NewEventPage> {
   List<Widget> _buildAgentField() {
     return [
       const SizedBox(height: 16),
-      DropdownButtonFormField<String>(
-        decoration: const InputDecoration(
-          labelText: 'Agent *',
-          border: OutlineInputBorder(),
-        ),
-        value: _selectedAgentId,
-        items: [
-          const DropdownMenuItem(
-            value: null,
-            child: Text('Select an agent'),
-          ),
-          ..._agents.map((agent) {
-            return DropdownMenuItem(
-              value: agent.id,
-              child: Text('${agent.name}${agent.agency != null ? ' (${agent.agency})' : ''}'),
-            );
-          }),
-        ],
-        onChanged: (value) {
-          setState(() {
-            _selectedAgentId = value;
-          });
-        },
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'Please select an agent';
-          }
-          return null;
-        },
-      ),
+      // Use the _agents list and _isLoadingAgents field
+      _isLoadingAgents
+          ? const Center(
+              child: Padding(
+                padding: EdgeInsets.all(16.0),
+                child: CircularProgressIndicator(),
+              ),
+            )
+          : _agents.isNotEmpty
+              ? SafeDropdown(
+                  value: _selectedAgentId,
+                  items: _agents.map((agent) => agent.id ?? '').where((id) => id.isNotEmpty).toList(),
+                  labelText: 'Agent *',
+                  hintText: 'Select an agent',
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedAgentId = value;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please select an agent';
+                    }
+                    return null;
+                  },
+                )
+              : TextFormField(
+                  decoration: const InputDecoration(
+                    labelText: 'Agent *',
+                    hintText: 'Enter agent name or ID',
+                    border: OutlineInputBorder(),
+                  ),
+                  initialValue: _selectedAgentId,
+                  onChanged: (value) {
+                    _selectedAgentId = value.isEmpty ? null : value;
+                  },
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter an agent';
+                    }
+                    return null;
+                  },
+                ),
     ];
   }
 
@@ -778,18 +820,11 @@ class _NewEventPageState extends State<NewEventPage> {
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: DropdownButtonFormField<String>(
-              decoration: const InputDecoration(
-                labelText: 'Currency',
-                border: OutlineInputBorder(),
-              ),
+            child: SafeDropdown(
               value: _selectedCurrency,
-              items: _currencies.map((currency) {
-                return DropdownMenuItem(
-                  value: currency,
-                  child: Text(currency),
-                );
-              }).toList(),
+              items: _currencies,
+              labelText: 'Currency',
+              hintText: 'Select currency',
               onChanged: (value) {
                 if (value != null) {
                   setState(() {
@@ -822,18 +857,11 @@ class _NewEventPageState extends State<NewEventPage> {
       Row(
         children: [
           Expanded(
-            child: DropdownButtonFormField<EventStatus>(
-              decoration: const InputDecoration(
-                labelText: 'Status',
-                border: OutlineInputBorder(),
-              ),
+            child: SafeEnumDropdown<EventStatus>(
               value: _selectedStatus,
-              items: EventStatus.values.map((status) {
-                return DropdownMenuItem(
-                  value: status,
-                  child: Text(status.toString().split('.').last),
-                );
-              }).toList(),
+              items: EventStatus.values,
+              labelText: 'Status',
+              hintText: 'Select status',
               onChanged: (value) {
                 if (value != null) {
                   setState(() {
@@ -845,18 +873,11 @@ class _NewEventPageState extends State<NewEventPage> {
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: DropdownButtonFormField<PaymentStatus>(
-              decoration: const InputDecoration(
-                labelText: 'Payment Status',
-                border: OutlineInputBorder(),
-              ),
+            child: SafeEnumDropdown<PaymentStatus>(
               value: _selectedPaymentStatus,
-              items: PaymentStatus.values.map((status) {
-                return DropdownMenuItem(
-                  value: status,
-                  child: Text(status.toString().split('.').last),
-                );
-              }).toList(),
+              items: PaymentStatus.values,
+              labelText: 'Payment Status',
+              hintText: 'Select payment status',
               onChanged: (value) {
                 if (value != null) {
                   setState(() {
@@ -975,31 +996,38 @@ class _NewEventPageState extends State<NewEventPage> {
 
   List<Widget> _buildCastingFields() {
     return [
-      DropdownButtonFormField<String>(
-        decoration: const InputDecoration(
-          labelText: 'Job Type',
-          border: OutlineInputBorder(),
-        ),
+      SafeDropdown(
         value: _selectedJobType,
-        items: _jobTypes.map((type) {
-          return DropdownMenuItem(
-            value: type,
-            child: Text(type),
-          );
-        }).toList(),
+        items: _jobTypes,
+        labelText: 'Job Type',
+        hintText: 'Select job type',
         onChanged: (value) {
-          setState(() {
-            _selectedJobType = value!;
-          });
+          if (value == 'Add manually') {
+            setState(() {
+              _isCustomJobType = true;
+              _selectedJobType = null;
+            });
+          } else {
+            setState(() {
+              _isCustomJobType = false;
+              _selectedJobType = value;
+            });
+          }
+        },
+        validator: (value) {
+          if (!_isCustomJobType && (value == null || value.isEmpty)) {
+            return 'Job type is required';
+          }
+          return null;
         },
       ),
       const SizedBox(height: 16),
-      if (_selectedJobType == 'Add manually') ...[
+      if (_isCustomJobType) ...[
         ui.Input(
           controller: _customTypeController,
           placeholder: 'Enter custom job type',
           validator: (value) {
-            if (_selectedJobType == 'Add manually' && (value == null || value.trim().isEmpty)) {
+            if (_isCustomJobType && (value == null || value.trim().isEmpty)) {
               return 'Job type is required';
             }
             return null;
@@ -1026,19 +1054,14 @@ class _NewEventPageState extends State<NewEventPage> {
       Row(
         children: [
           Expanded(
-            child: DropdownButtonFormField<String>(
-              decoration: const InputDecoration(
-                labelText: 'Test Type',
-                border: OutlineInputBorder(),
-              ),
+            child: SafeDropdown(
               value: _selectedTestType,
-              items: const [
-                DropdownMenuItem(value: 'Free', child: Text('Free')),
-                DropdownMenuItem(value: 'Paid', child: Text('Paid')),
-              ],
+              items: const ['Free', 'Paid'],
+              labelText: 'Test Type',
+              hintText: 'Select test type',
               onChanged: (value) {
                 setState(() {
-                  _selectedTestType = value!;
+                  _selectedTestType = value ?? 'Free';
                   _isPaid = value == 'Paid';
                 });
               },
@@ -1070,19 +1093,14 @@ class _NewEventPageState extends State<NewEventPage> {
       Row(
         children: [
           Expanded(
-            child: DropdownButtonFormField<String>(
-              decoration: const InputDecoration(
-                labelText: 'Polaroid Type',
-                border: OutlineInputBorder(),
-              ),
+            child: SafeDropdown(
               value: _selectedPolaroidType,
-              items: const [
-                DropdownMenuItem(value: 'Free', child: Text('Free')),
-                DropdownMenuItem(value: 'Paid', child: Text('Paid')),
-              ],
+              items: const ['Free', 'Paid'],
+              labelText: 'Polaroid Type',
+              hintText: 'Select polaroid type',
               onChanged: (value) {
                 setState(() {
-                  _selectedPolaroidType = value!;
+                  _selectedPolaroidType = value ?? 'Free';
                   _isPaid = value == 'Paid';
                 });
               },

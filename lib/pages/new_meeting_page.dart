@@ -447,7 +447,9 @@ class _NewMeetingPageState extends State<NewMeetingPage> {
               border: Border.all(color: const Color(0xFF2E2E2E)),
             ),
             child: DropdownButtonFormField<String>(
-              value: _selectedMeetingType.isEmpty ? null : _selectedMeetingType,
+              value: _selectedMeetingType.isNotEmpty && _meetingTypes.contains(_selectedMeetingType)
+                  ? _selectedMeetingType
+                  : null,
               decoration: const InputDecoration(
                 border: InputBorder.none,
                 contentPadding:
@@ -639,7 +641,7 @@ class _NewMeetingPageState extends State<NewMeetingPage> {
             border: Border.all(color: const Color(0xFF2E2E2E)),
           ),
           child: DropdownButtonFormField<String>(
-            value: _selectedStatus,
+            value: _statusOptions.contains(_selectedStatus) ? _selectedStatus : _statusOptions.first,
             decoration: const InputDecoration(
               border: InputBorder.none,
               contentPadding:

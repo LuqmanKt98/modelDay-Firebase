@@ -19,6 +19,7 @@ class _LandingPageState extends State<LandingPage> {
 
   bool _isNavBarVisible = true;
   double _lastScrollOffset = 0;
+  bool _hasRedirected = false;
 
   void _scrollToFeatures() {
     final context = _featuresKey.currentContext;
@@ -34,7 +35,25 @@ class _LandingPageState extends State<LandingPage> {
   @override
   void initState() {
     super.initState();
+    debugPrint('🏠 LandingPage.initState() called');
     _scrollController.addListener(_onScroll);
+    _checkAuthStatus();
+  }
+
+  void _checkAuthStatus() {
+    // Check auth status once and redirect if needed
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _hasRedirected) return;
+
+      final authService = context.read<AuthService>();
+      debugPrint('🔍 LandingPage - Auth user: ${authService.currentUser?.email ?? 'null'}');
+
+      if (authService.currentUser != null) {
+        debugPrint('🔄 LandingPage - User logged in, redirecting to welcome...');
+        _hasRedirected = true;
+        Navigator.pushReplacementNamed(context, '/welcome');
+      }
+    });
   }
 
   @override
@@ -74,16 +93,9 @@ class _LandingPageState extends State<LandingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final authService = context.watch<AuthService>();
+    debugPrint('🏗️ LandingPage.build() called');
 
-    // If user is already logged in, redirect to welcome page
-    if (authService.currentUser != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pushReplacementNamed(context, '/welcome');
-      });
-      return const SizedBox.shrink();
-    }
-
+    // Don't watch auth service to avoid rebuilds - auth redirect is handled in initState
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(

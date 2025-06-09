@@ -6,6 +6,7 @@ import 'package:new_flutter/models/agent.dart';
 import 'package:new_flutter/widgets/app_layout.dart';
 import 'package:new_flutter/widgets/ui/input.dart' as ui;
 import 'package:new_flutter/widgets/ui/button.dart';
+import 'package:new_flutter/widgets/ui/safe_dropdown.dart';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
@@ -48,6 +49,7 @@ class _NewJobPageState extends State<NewJobPage> {
   final List<PlatformFile> _selectedFiles = [];
   bool _isLoading = false;
   bool _isCustomType = false;
+  bool _isLoadingAgents = true;
   String? _error;
 
   // Job Types
@@ -110,10 +112,17 @@ class _NewJobPageState extends State<NewJobPage> {
       if (mounted) {
         setState(() {
           _agents = agents;
+          _isLoadingAgents = false;
         });
       }
     } catch (e) {
       debugPrint('Error loading agents: $e');
+      if (mounted) {
+        setState(() {
+          _agents = []; // Set empty list on error
+          _isLoadingAgents = false;
+        });
+      }
     }
   }
 
@@ -350,39 +359,11 @@ class _NewJobPageState extends State<NewJobPage> {
                   ],
                 ),
               ] else ...[
-                DropdownButtonFormField<String>(
-                  value: _selectedJobType.isEmpty ? null : _selectedJobType,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: const Color(0xFF2E2E2E),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFF444444)),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFF444444)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFFCDAA7D)),
-                    ),
-                  ),
-                  dropdownColor: const Color(0xFF2E2E2E),
-                  style: const TextStyle(color: Colors.white),
-                  hint: const Text(
-                    'Select job type',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                  items: _jobTypes.map((type) {
-                    return DropdownMenuItem<String>(
-                      value: type,
-                      child: Text(
-                        type,
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                    );
-                  }).toList(),
+                SafeDropdown(
+                  value: _selectedJobType,
+                  items: _jobTypes,
+                  labelText: 'Job Type',
+                  hintText: 'Select job type',
                   onChanged: (value) {
                     if (value == 'Add manually') {
                       setState(() {
@@ -391,7 +372,7 @@ class _NewJobPageState extends State<NewJobPage> {
                       });
                     } else {
                       setState(() {
-                        _selectedJobType = value ?? '';
+                        _selectedJobType = value ?? 'Add manually';
                       });
                     }
                   },
@@ -466,24 +447,15 @@ class _NewJobPageState extends State<NewJobPage> {
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(
-                        labelText: 'Currency',
-                        border: OutlineInputBorder(),
-                      ),
+                    child: SafeDropdown(
                       value: _selectedCurrency,
-                      items: _currencies.map((currency) {
-                        return DropdownMenuItem(
-                          value: currency,
-                          child: Text(currency),
-                        );
-                      }).toList(),
+                      items: _currencies,
+                      labelText: 'Currency',
+                      hintText: 'Select currency',
                       onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _selectedCurrency = value;
-                          });
-                        }
+                        setState(() {
+                          _selectedCurrency = value ?? 'USD';
+                        });
                       },
                     ),
                   ),
@@ -582,36 +554,33 @@ class _NewJobPageState extends State<NewJobPage> {
               const SizedBox(height: 24),
 
               // Agent Selection
-              DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                  labelText: 'Booking Agent *',
-                  border: OutlineInputBorder(),
-                ),
-                value: _selectedAgentId,
-                items: [
-                  const DropdownMenuItem(
-                    value: null,
-                    child: Text('Select an agent'),
-                  ),
-                  ..._agents.map((agent) {
-                    return DropdownMenuItem(
-                      value: agent.id,
-                      child: Text('${agent.name}${agent.agency != null ? ' (${agent.agency})' : ''}'),
-                    );
-                  }),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    _selectedAgentId = value;
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select a booking agent';
-                  }
-                  return null;
-                },
-              ),
+              _isLoadingAgents
+                  ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                  : _agents.isNotEmpty
+                      ? SafeDropdown(
+                          value: _selectedAgentId,
+                          items: _agents.map((agent) => agent.id ?? '').where((id) => id.isNotEmpty).toList(),
+                          labelText: 'Booking Agent',
+                          hintText: 'Select an agent',
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedAgentId = value;
+                            });
+                          },
+                        )
+                      : ui.Input(
+                          label: 'Booking Agent',
+                          controller: TextEditingController(text: _selectedAgentId ?? ''),
+                          placeholder: 'Enter agent name or ID',
+                          onChanged: (value) {
+                            _selectedAgentId = value;
+                          },
+                        ),
 
               const SizedBox(height: 24),
 
@@ -711,47 +680,29 @@ class _NewJobPageState extends State<NewJobPage> {
               Row(
                 children: [
                   Expanded(
-                    child: DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(
-                        labelText: 'Status',
-                        border: OutlineInputBorder(),
-                      ),
+                    child: SafeDropdown(
                       value: _selectedStatus,
-                      items: _statusOptions.map((status) {
-                        return DropdownMenuItem(
-                          value: status,
-                          child: Text(status),
-                        );
-                      }).toList(),
+                      items: _statusOptions,
+                      labelText: 'Status',
+                      hintText: 'Select status',
                       onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _selectedStatus = value;
-                          });
-                        }
+                        setState(() {
+                          _selectedStatus = value ?? 'Scheduled';
+                        });
                       },
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: DropdownButtonFormField<String>(
-                      decoration: const InputDecoration(
-                        labelText: 'Payment Status',
-                        border: OutlineInputBorder(),
-                      ),
+                    child: SafeDropdown(
                       value: _selectedPaymentStatus,
-                      items: _paymentStatusOptions.map((status) {
-                        return DropdownMenuItem(
-                          value: status,
-                          child: Text(status),
-                        );
-                      }).toList(),
+                      items: _paymentStatusOptions,
+                      labelText: 'Payment Status',
+                      hintText: 'Select payment status',
                       onChanged: (value) {
-                        if (value != null) {
-                          setState(() {
-                            _selectedPaymentStatus = value;
-                          });
-                        }
+                        setState(() {
+                          _selectedPaymentStatus = value ?? 'Unpaid';
+                        });
                       },
                     ),
                   ),

@@ -234,7 +234,7 @@ class _AddEventPageState extends State<AddEventPage> {
   Widget build(BuildContext context) {
     return AppLayout(
       currentPage: '/add-event',
-      title: 'Add New Activity',
+      title: 'Add New Event',
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(0),
         child: Form(
@@ -257,7 +257,7 @@ class _AddEventPageState extends State<AddEventPage> {
 
               // Event Type Selection
               const Text(
-                'Activity Type',
+                'Event Type',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,
@@ -272,7 +272,7 @@ class _AddEventPageState extends State<AddEventPage> {
                   border: Border.all(color: const Color(0xFF2E2E2E)),
                 ),
                 child: DropdownButtonFormField<String>(
-                  value: _selectedEventType.isEmpty ? null : _selectedEventType,
+                  value: _selectedEventType.isEmpty || !_eventTypes.any((type) => type['value'] == _selectedEventType) ? null : _selectedEventType,
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     contentPadding:
@@ -281,12 +281,12 @@ class _AddEventPageState extends State<AddEventPage> {
                   dropdownColor: Colors.black,
                   style: const TextStyle(color: Colors.white),
                   hint: const Text(
-                    'Select activity type',
+                    'Select event type',
                     style: TextStyle(color: Colors.white70),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please select an activity type';
+                      return 'Please select an event type';
                     }
                     return null;
                   },
@@ -324,7 +324,7 @@ class _AddEventPageState extends State<AddEventPage> {
               // Job Type Selection
               if (_selectedEventType.isNotEmpty) ...[
                 const Text(
-                  'Event Type',
+                  'Job Type',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -337,11 +337,11 @@ class _AddEventPageState extends State<AddEventPage> {
                     children: [
                       Expanded(
                         child: ui.Input(
-                          label: 'Custom Event Type',
+                          label: 'Custom Job Type',
                           controller: _customTypeController,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter event type';
+                              return 'Please enter job type';
                             }
                             return null;
                           },
@@ -368,7 +368,7 @@ class _AddEventPageState extends State<AddEventPage> {
                       border: Border.all(color: const Color(0xFF2E2E2E)),
                     ),
                     child: DropdownButtonFormField<String>(
-                      value: _selectedJobType.isEmpty ? null : _selectedJobType,
+                      value: _selectedJobType.isEmpty || !_jobTypes.contains(_selectedJobType) ? null : _selectedJobType,
                       decoration: const InputDecoration(
                         border: InputBorder.none,
                         contentPadding:
@@ -377,7 +377,7 @@ class _AddEventPageState extends State<AddEventPage> {
                       dropdownColor: Colors.black,
                       style: const TextStyle(color: Colors.white),
                       hint: const Text(
-                        'Select event type',
+                        'Select job type',
                         style: TextStyle(color: Colors.white70),
                       ),
                       items: _jobTypes.map((type) {
@@ -612,7 +612,7 @@ class _AddEventPageState extends State<AddEventPage> {
                             border: Border.all(color: const Color(0xFF2E2E2E)),
                           ),
                           child: DropdownButtonFormField<String>(
-                            value: _selectedCurrency,
+                            value: _currencies.contains(_selectedCurrency) ? _selectedCurrency : _currencies.first,
                             decoration: const InputDecoration(
                               border: InputBorder.none,
                               contentPadding: EdgeInsets.symmetric(
@@ -665,7 +665,7 @@ class _AddEventPageState extends State<AddEventPage> {
                   Expanded(
                     child: Button(
                       onPressed: _isLoading ? null : _handleSubmit,
-                      text: _isLoading ? 'Creating...' : 'Create Activity',
+                      text: _isLoading ? 'Creating...' : 'Create Event',
                       variant: ButtonVariant.primary,
                     ),
                   ),

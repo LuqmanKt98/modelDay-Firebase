@@ -33,18 +33,22 @@ class _DirectBookingsPageState extends State<DirectBookingsPage> {
   }
 
   Future<void> _loadBookings() async {
-    setState(() => _isLoading = true);
+    if (mounted) {
+      setState(() => _isLoading = true);
+    }
     try {
       final bookings = await DirectBookingsService.list();
-      setState(() {
-        _bookings = bookings;
-        _filteredBookings = bookings;
-        _isLoading = false;
-      });
-      _applyFilters();
-    } catch (e) {
-      setState(() => _isLoading = false);
       if (mounted) {
+        setState(() {
+          _bookings = bookings;
+          _filteredBookings = bookings;
+          _isLoading = false;
+        });
+        _applyFilters();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error loading bookings: $e')),
         );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../services/auth_service.dart';
+import '../../utils/navigation_guard.dart';
 
 class WelcomeGuide extends StatefulWidget {
   final bool isOpen;
@@ -177,6 +178,11 @@ class _WelcomeGuideState extends State<WelcomeGuide>
         _completed = true;
       });
 
+      // Mark onboarding as completed in the database
+      final authService = AuthService();
+      await authService.updateOnboardingCompleted(true);
+      debugPrint('Onboarding marked as completed');
+
       await Future.delayed(const Duration(milliseconds: 1500));
       widget.onClose();
     } catch (e) {
@@ -194,7 +200,7 @@ class _WelcomeGuideState extends State<WelcomeGuide>
       // Navigate to the page with a slight delay to ensure smooth transition
       Future.delayed(const Duration(milliseconds: 200), () {
         if (mounted) {
-          Navigator.pushNamed(context, step.action!);
+          NavigationGuard.navigateTo(context, step.action!);
         }
       });
     }
@@ -350,7 +356,7 @@ class _WelcomeGuideState extends State<WelcomeGuide>
               // Navigate to profile setup with a slight delay
               Future.delayed(const Duration(milliseconds: 200), () {
                 if (mounted) {
-                  Navigator.pushNamed(context, '/profile?from_onboarding=true');
+                  NavigationGuard.navigateTo(context, '/profile?from_onboarding=true');
                 }
               });
             },

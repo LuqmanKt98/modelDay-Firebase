@@ -269,7 +269,7 @@ class _NewCastingPageState extends State<NewCastingPage> {
                   labelText: 'Status',
                   border: OutlineInputBorder(),
                 ),
-                value: _status,
+                value: _statuses.contains(_status) ? _status : null,
                 items: _statuses.map((status) {
                   return DropdownMenuItem(
                     value: status,

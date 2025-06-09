@@ -435,7 +435,9 @@ class _NewShootingPageState extends State<NewShootingPage> {
             border: Border.all(color: const Color(0xFF2E2E2E)),
           ),
           child: DropdownButtonFormField<String>(
-            value: _selectedJobType.isEmpty ? null : _selectedJobType,
+            value: _selectedJobType.isNotEmpty && _jobTypes.contains(_selectedJobType)
+                ? _selectedJobType
+                : null,
             decoration: const InputDecoration(
               border: InputBorder.none,
               contentPadding:
@@ -620,7 +622,7 @@ class _NewShootingPageState extends State<NewShootingPage> {
             border: Border.all(color: const Color(0xFF2E2E2E)),
           ),
           child: DropdownButtonFormField<String>(
-            value: _selectedStatus,
+            value: _statusOptions.contains(_selectedStatus) ? _selectedStatus : null,
             decoration: const InputDecoration(
               border: InputBorder.none,
               contentPadding:
@@ -680,7 +682,7 @@ class _NewShootingPageState extends State<NewShootingPage> {
                   border: Border.all(color: const Color(0xFF2E2E2E)),
                 ),
                 child: DropdownButtonFormField<String>(
-                  value: _selectedCurrency,
+                  value: _currencies.contains(_selectedCurrency) ? _selectedCurrency : null,
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     contentPadding:

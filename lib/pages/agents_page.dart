@@ -37,23 +37,29 @@ class _AgentsPageState extends State<AgentsPage> {
 
   Future<void> _loadAgents() async {
     try {
-      setState(() {
-        _isLoading = true;
-        _error = null;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+          _error = null;
+        });
+      }
 
       final agents = await _agentsService.getAgents();
       agents.sort((a, b) => a.name.compareTo(b.name));
 
-      setState(() {
-        _agents = agents;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _agents = agents;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _error = 'Failed to load agents: $e';
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to load agents: $e';
+          _isLoading = false;
+        });
+      }
     }
   }
 

@@ -3,6 +3,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/debug_tracker.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -11,37 +12,35 @@ class SplashPage extends StatefulWidget {
   State<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage> {
+class _SplashPageState extends State<SplashPage> with DebugTrackingMixin {
+
   @override
   void initState() {
     super.initState();
-    _initializeApp();
+    debugPrint('🌟 SplashPage.initState() called');
+    // Don't auto-navigate - let the route system handle navigation
+    _initializeAppWithoutNavigation();
   }
 
-  Future<void> _initializeApp() async {
+  Future<void> _initializeAppWithoutNavigation() async {
     try {
+      debugPrint('🔄 SplashPage._initializeAppWithoutNavigation() started');
       // Wait for auth service to initialize
       final authService = context.read<AuthService>();
+      debugPrint('📱 AuthService obtained: ${authService.runtimeType}');
 
       // Wait a minimum time for splash screen visibility
+      debugPrint('⏳ Waiting for auth initialization...');
       await Future.wait([
-        Future.delayed(const Duration(seconds: 2)),
+        Future.delayed(const Duration(seconds: 1)), // Shorter delay
         _waitForAuthInitialization(authService),
       ]);
 
-      if (!mounted) return;
-
-      // Navigate based on authentication status
-      if (authService.isAuthenticated) {
-        Navigator.pushReplacementNamed(context, '/welcome');
-      } else {
-        Navigator.pushReplacementNamed(context, '/landing');
-      }
+      debugPrint('✅ Auth initialization complete - no auto navigation');
+      // Don't navigate - let the route system handle it
     } catch (e) {
-      debugPrint('Splash initialization error: $e');
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/landing');
-      }
+      debugPrint('❌ Splash initialization error: $e');
+      // Don't navigate on error either
     }
   }
 
@@ -53,13 +52,14 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget buildWithDebug(BuildContext context) {
+    // Don't use Consumer to avoid rebuilds - auth state is handled in initState
+    final authService = context.read<AuthService>();
+
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Consumer<AuthService>(
-        builder: (context, authService, child) {
-          return Stack(
-            children: [
+      body: Stack(
+        children: [
               // Background gradient
               Container(
                 decoration: BoxDecoration(
@@ -227,9 +227,7 @@ class _SplashPageState extends State<SplashPage> {
                       duration: const Duration(milliseconds: 400),
                     ),
               ),
-            ],
-          );
-        },
+        ],
       ),
     );
   }

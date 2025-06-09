@@ -32,21 +32,27 @@ class _CastingsPageState extends State<CastingsPage> {
 
   Future<void> _loadCastings() async {
     try {
-      setState(() {
-        isLoading = true;
-        error = null;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = true;
+          error = null;
+        });
+      }
 
       final loadedCastings = await Casting.list();
-      setState(() {
-        castings = loadedCastings;
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          castings = loadedCastings;
+          isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        error = 'Failed to load castings: $e';
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          error = 'Failed to load castings: $e';
+          isLoading = false;
+        });
+      }
     }
   }
 

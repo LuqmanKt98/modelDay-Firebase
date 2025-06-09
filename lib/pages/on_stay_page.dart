@@ -31,7 +31,9 @@ class _OnStayPageState extends State<OnStayPage> with TickerProviderStateMixin {
   }
 
   Future<void> _loadStays() async {
-    setState(() => _loading = true);
+    if (mounted) {
+      setState(() => _loading = true);
+    }
 
     try {
       List<OnStay> stays;
@@ -49,13 +51,15 @@ class _OnStayPageState extends State<OnStayPage> with TickerProviderStateMixin {
           stays = await OnStayService.list();
       }
 
-      setState(() {
-        _stays = stays;
-        _loading = false;
-      });
-    } catch (e) {
-      setState(() => _loading = false);
       if (mounted) {
+        setState(() {
+          _stays = stays;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error loading stays: $e')),
         );

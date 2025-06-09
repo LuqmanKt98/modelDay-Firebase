@@ -193,7 +193,7 @@ class _NewTestPageState extends State<NewTestPage> {
                         labelText: 'Currency',
                         border: OutlineInputBorder(),
                       ),
-                      value: _currency,
+                      value: _currencies.contains(_currency) ? _currency : _currencies.first,
                       items: _currencies.map((currency) {
                         return DropdownMenuItem(
                           value: currency,
@@ -217,7 +217,7 @@ class _NewTestPageState extends State<NewTestPage> {
                   labelText: 'Status',
                   border: OutlineInputBorder(),
                 ),
-                value: _status,
+                value: _statuses.contains(_status) ? _status : 'pending',
                 items: _statuses.map((status) {
                   return DropdownMenuItem(
                     value: status,

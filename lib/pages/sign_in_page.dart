@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:new_flutter/services/auth_service.dart';
 import 'package:new_flutter/services/logger_service.dart';
 import 'package:new_flutter/theme/app_theme.dart';
+import 'package:new_flutter/widgets/enhanced_icon.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -17,48 +18,94 @@ class _SignInPageState extends State<SignInPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   String _error = '';
+  bool _isLoading = false;
+  bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    debugPrint('🔑 SignInPage.initState() called');
+  }
 
   @override
   void dispose() {
+    debugPrint('🗑️ SignInPage.dispose() called');
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _handleSignIn() async {
+    debugPrint('🔑 SignInPage._handleSignIn() called');
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _error = '');
+    setState(() {
+      _error = '';
+      _isLoading = true;
+    });
 
     try {
+      debugPrint('🔄 SignInPage - Attempting sign in...');
       await context.read<AuthService>().signIn(
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
+      debugPrint('✅ SignInPage - Sign in successful, navigating to welcome');
+
+      // Navigate to welcome page after successful authentication
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/welcome');
       }
     } catch (e) {
-      setState(() => _error = 'Invalid email or password. Please try again.');
+      debugPrint('❌ SignInPage - Sign in failed: $e');
+      if (mounted) {
+        setState(() {
+          _error = 'Invalid email or password. Please try again.';
+          _isLoading = false;
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   Future<void> _handleGoogleSignIn() async {
-    setState(() => _error = '');
+    debugPrint('🔑 SignInPage._handleGoogleSignIn() called');
+    setState(() {
+      _error = '';
+      _isLoading = true;
+    });
 
     try {
+      debugPrint('🔄 SignInPage - Attempting Google sign in...');
       await context.read<AuthService>().signInWithGoogle();
-      // Navigation will be handled by auth state changes
+      debugPrint('✅ SignInPage - Google sign in successful, navigating to welcome');
+
+      // Navigate to welcome page after successful authentication
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/welcome');
+      }
     } catch (e) {
-      setState(
-        () => _error = 'Failed to sign in with Google. Please try again.',
-      );
+      debugPrint('❌ SignInPage - Google sign in failed: $e');
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to sign in with Google. Please try again.';
+          _isLoading = false;
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = context.watch<AuthService>().loading;
+    debugPrint('🏗️ SignInPage.build() called');
+    // Use local loading state instead of watching AuthService to prevent rebuilds
 
     return Scaffold(
       body: SafeArea(
@@ -223,8 +270,25 @@ class _SignInPageState extends State<SignInPage> {
                                         AppTheme.textFieldDecoration.copyWith(
                                       labelText: 'Password',
                                       hintText: '********',
+                                      suffixIcon: SizedBox(
+                                        width: 48,
+                                        height: 48,
+                                        child: EnhancedIconButton(
+                                          icon: _obscurePassword
+                                              ? Icons.visibility
+                                              : Icons.visibility_off,
+                                          onPressed: () {
+                                            setState(() {
+                                              _obscurePassword = !_obscurePassword;
+                                            });
+                                          },
+                                          color: AppTheme.goldColor.withValues(alpha: 0.7),
+                                          size: 20,
+                                          splashRadius: 20,
+                                        ),
+                                      ),
                                     ),
-                                    obscureText: true,
+                                    obscureText: _obscurePassword,
                                     textInputAction: TextInputAction.done,
                                     onFieldSubmitted: (_) async =>
                                         await _handleSignIn(),
@@ -252,8 +316,8 @@ class _SignInPageState extends State<SignInPage> {
                                   ),
                                   const SizedBox(height: 16),
                                   ElevatedButton.icon(
-                                    onPressed: isLoading ? null : _handleSignIn,
-                                    icon: isLoading
+                                    onPressed: _isLoading ? null : _handleSignIn,
+                                    icon: _isLoading
                                         ? const SizedBox(
                                             width: 20,
                                             height: 20,
@@ -263,7 +327,7 @@ class _SignInPageState extends State<SignInPage> {
                                           )
                                         : const Icon(Icons.login),
                                     label: Text(
-                                      isLoading ? 'Signing in...' : 'Sign In',
+                                      _isLoading ? 'Signing in...' : 'Sign In',
                                     ),
                                     style: AppTheme.primaryButtonStyle,
                                   ),
@@ -288,7 +352,7 @@ class _SignInPageState extends State<SignInPage> {
                                   const SizedBox(height: 24),
                                   OutlinedButton.icon(
                                     onPressed:
-                                        isLoading ? null : _handleGoogleSignIn,
+                                        _isLoading ? null : _handleGoogleSignIn,
                                     icon: const Icon(
                                       Icons.g_mobiledata,
                                       size: 20,

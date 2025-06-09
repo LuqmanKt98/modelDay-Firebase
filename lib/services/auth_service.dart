@@ -12,41 +12,83 @@ class AuthService extends ChangeNotifier {
   User? _currentUser;
   bool _loading = false;
   bool _isInitialized = false;
+  bool _connectivityTested = false;
+  bool _profileCreationInProgress = false;
 
   User? get currentUser => _currentUser;
   bool get loading => _loading;
   bool get isAuthenticated => _currentUser != null;
   bool get isInitialized => _isInitialized;
 
-  AuthService() {
+  static AuthService? _instance;
+  static AuthService get instance {
+    _instance ??= AuthService._internal();
+    return _instance!;
+  }
+
+  AuthService._internal() {
+    debugPrint('🔐 AuthService singleton constructor called');
     _init();
+    // Initialize API client
+    _initializeApiClient();
+  }
+
+  void _initializeApiClient() {
+    try {
+      // Import and initialize API client here if needed
+      debugPrint('🔗 API Client initialization skipped for now');
+    } catch (e) {
+      debugPrint('❌ API Client initialization error: $e');
+    }
+  }
+
+  // Factory constructor for Provider compatibility
+  factory AuthService() {
+    debugPrint('🔐 AuthService factory called - returning singleton');
+    return instance;
   }
 
   void _init() async {
     try {
+      debugPrint('🔄 AuthService._init() started');
+
       // Listen for auth state changes
       _auth.authStateChanges().listen((User? user) async {
-        _currentUser = user;
-        
-        if (user != null) {
-          debugPrint('User signed in: ${user.email}');
-          // Create user profile if it doesn't exist
-          await _createUserProfileIfNeeded(user);
-        } else {
-          debugPrint('User signed out');
-          await TokenStorageService.clearAll();
-        }
+        debugPrint('🔔 AuthService - Auth state changed');
+        debugPrint('🔍 Previous user: ${_currentUser?.email ?? 'null'}');
+        debugPrint('🔍 New user: ${user?.email ?? 'null'}');
 
-        notifyListeners();
+        final previousUser = _currentUser;
+        _currentUser = user;
+
+        // Only process if the user actually changed
+        if (previousUser?.uid != user?.uid) {
+          debugPrint('✅ AuthService - User actually changed, processing...');
+          if (user != null) {
+            debugPrint('👤 User signed in: ${user.email}');
+            // Create user profile if it doesn't exist
+            await _createUserProfileIfNeeded(user);
+          } else {
+            debugPrint('👋 User signed out');
+            await TokenStorageService.clearAll();
+          }
+
+          debugPrint('📢 AuthService - Notifying listeners...');
+          notifyListeners();
+        } else {
+          debugPrint('⏭️ AuthService - Same user, skipping processing');
+        }
       });
 
       // Check for existing user
       _currentUser = _auth.currentUser;
-      
+      debugPrint('🔍 AuthService - Initial user: ${_currentUser?.email ?? 'null'}');
+
       _isInitialized = true;
+      debugPrint('✅ AuthService - Initialization complete');
       notifyListeners();
     } catch (e) {
-      debugPrint('Auth initialization error: $e');
+      debugPrint('❌ Auth initialization error: $e');
       _isInitialized = true;
       notifyListeners();
     }
@@ -54,12 +96,29 @@ class AuthService extends ChangeNotifier {
 
   /// Create user profile in Firestore if it doesn't exist
   Future<void> _createUserProfileIfNeeded(User user) async {
+    // Prevent multiple simultaneous profile creation attempts
+    if (_profileCreationInProgress) {
+      debugPrint('Profile creation already in progress, skipping...');
+      return;
+    }
+
     try {
+      _profileCreationInProgress = true;
+      debugPrint('Attempting to create/check user profile for: ${user.email}');
+
+      // Test Firestore connectivity first (only once)
+      if (!_connectivityTested) {
+        await _testFirestoreConnectivity();
+        _connectivityTested = true;
+      }
+
       // Use direct Firestore calls for all platforms - simpler and more reliable
       final userDoc = await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
           .get();
+
+      debugPrint('User document exists: ${userDoc.exists}');
 
       if (!userDoc.exists) {
         await FirebaseFirestore.instance
@@ -75,10 +134,43 @@ class AuthService extends ChangeNotifier {
           'onboarding_completed': false,
         });
         debugPrint('User profile created for: ${user.email}');
+      } else {
+        debugPrint('User profile already exists for: ${user.email}');
       }
     } catch (e) {
       debugPrint('Error creating user profile: $e');
       // Don't rethrow - this is not critical for authentication
+    } finally {
+      _profileCreationInProgress = false;
+    }
+  }
+
+  /// Test Firestore connectivity
+  Future<void> _testFirestoreConnectivity() async {
+    try {
+      debugPrint('Testing Firestore connectivity...');
+
+      // Try to write a simple test document
+      await FirebaseFirestore.instance
+          .collection('test')
+          .doc('connectivity')
+          .set({
+        'timestamp': FieldValue.serverTimestamp(),
+        'test': true,
+      });
+
+      debugPrint('✅ Firestore write test successful');
+
+      // Try to read it back
+      final testDoc = await FirebaseFirestore.instance
+          .collection('test')
+          .doc('connectivity')
+          .get();
+
+      debugPrint('✅ Firestore read test successful: ${testDoc.exists}');
+
+    } catch (e) {
+      debugPrint('❌ Firestore connectivity test failed: $e');
     }
   }
 
@@ -117,9 +209,7 @@ class AuthService extends ChangeNotifier {
       _loading = false;
       notifyListeners();
 
-      if (_currentUser != null) {
-        navigatorKey.currentState?.pushReplacementNamed('/welcome');
-      }
+      // Don't navigate here - let the auth state listener handle navigation
     } catch (e) {
       debugPrint('Sign up error: $e');
       _loading = false;
@@ -150,9 +240,7 @@ class AuthService extends ChangeNotifier {
       _loading = false;
       notifyListeners();
 
-      if (_currentUser != null) {
-        navigatorKey.currentState?.pushReplacementNamed('/welcome');
-      }
+      // Don't navigate here - let the auth state listener handle navigation
     } catch (e) {
       debugPrint('Sign in error: $e');
       _loading = false;
@@ -199,9 +287,7 @@ class AuthService extends ChangeNotifier {
       _loading = false;
       notifyListeners();
 
-      if (_currentUser != null) {
-        navigatorKey.currentState?.pushReplacementNamed('/welcome');
-      }
+      // Don't navigate here - let the auth state listener handle navigation
     } catch (e) {
       debugPrint('Google sign in error: $e');
       _loading = false;

@@ -127,7 +127,7 @@ This document summarizes all the changes made to the Flutter project to match th
 - `/new-test` - Test creation
 - `/new-polaroids` - Polaroids creation
 - `/new-meeting` - Meeting creation
-- `/new-other` - Other event creation
+- `/new-event` - Other event creation
 
 ## Key Features Summary
 

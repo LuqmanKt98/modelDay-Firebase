@@ -400,7 +400,9 @@ class _NewIndustryContactPageState extends State<NewIndustryContactPage> {
               border: Border.all(color: const Color(0xFF2E2E2E)),
             ),
             child: DropdownButtonFormField<String>(
-              value: _selectedJobTitle.isEmpty ? null : _selectedJobTitle,
+              value: _selectedJobTitle.isNotEmpty && _jobTitles.contains(_selectedJobTitle)
+                  ? _selectedJobTitle
+                  : null,
               decoration: const InputDecoration(
                 border: InputBorder.none,
                 contentPadding:

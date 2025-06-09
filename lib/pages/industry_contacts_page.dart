@@ -37,23 +37,29 @@ class _IndustryContactsPageState extends State<IndustryContactsPage> {
 
   Future<void> _loadContacts() async {
     try {
-      setState(() {
-        _isLoading = true;
-        _error = null;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+          _error = null;
+        });
+      }
 
       final contacts = await _contactsService.getIndustryContacts();
       contacts.sort((a, b) => a.name.compareTo(b.name));
 
-      setState(() {
-        _contacts = contacts;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _contacts = contacts;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _error = 'Failed to load industry contacts: $e';
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to load industry contacts: $e';
+          _isLoading = false;
+        });
+      }
     }
   }
 

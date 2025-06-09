@@ -360,7 +360,7 @@ class _SettingsPageState extends State<SettingsPage> {
         style: TextStyle(color: Colors.grey[400]),
       ),
       trailing: DropdownButton<String>(
-        value: value,
+        value: items.contains(value) ? value : items.first,
         onChanged: onChanged,
         dropdownColor: Colors.grey[800],
         style: const TextStyle(color: Colors.white),

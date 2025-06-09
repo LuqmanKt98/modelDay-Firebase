@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:new_flutter/theme/app_theme.dart';
 import 'package:new_flutter/widgets/ui/bottom_sheet_popup.dart' as popup;
+import 'package:new_flutter/utils/navigation_guard.dart';
 import '../services/auth_service.dart';
 import 'onboarding/welcome_guide.dart';
+import 'enhanced_icon.dart';
 
 class Sidebar extends StatefulWidget {
   final String currentPage;
@@ -97,7 +99,7 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
     {
       'label': 'Other',
       'icon': Icons.more_horiz,
-      'path': '/new-other',
+      'path': '/other',
       'color': Colors.grey,
     },
   ];
@@ -237,16 +239,18 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                 const Spacer(),
                 // Show appropriate button based on platform
                 if (widget.isDesktop)
-                  IconButton(
+                  EnhancedIconButton(
+                    icon: Icons.chevron_left,
                     onPressed: widget.onCloseSidebar,
-                    icon: const Icon(Icons.chevron_left, color: Colors.white70),
-                    tooltip: 'Collapse sidebar',
+                    color: Colors.white70,
+                    size: 20,
                   )
                 else
-                  IconButton(
+                  EnhancedIconButton(
+                    icon: Icons.close,
                     onPressed: widget.onCloseSidebar,
-                    icon: const Icon(Icons.close, color: Colors.white70),
-                    tooltip: 'Close sidebar',
+                    color: Colors.white70,
+                    size: 20,
                   ),
               ],
             ),
@@ -262,6 +266,7 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                   // Main Features
                   _buildNavItem('Welcome', Icons.home, '/welcome'),
                   _buildNavItem('Calendar', Icons.calendar_today, '/calendar'),
+                  _buildNavItem('Community Board', Icons.forum_outlined, '/community-board'),
                   _buildNavItem(
                     'Full Schedule',
                     Icons.list,
@@ -302,6 +307,20 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                     'Job Gallery',
                     Icons.photo_library,
                     '/job-gallery',
+                  ),
+
+                  // For Agents Section
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16.0),
+                    child: Text(
+                      'For Agents',
+                      style: TextStyle(color: Colors.white38, fontSize: 12),
+                    ),
+                  ),
+                  _buildNavItem(
+                    'Submit Event for Model',
+                    Icons.send_outlined,
+                    '/submit-event',
                   ),
 
                   // Settings Section
@@ -352,9 +371,14 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
               borderRadius: BorderRadius.circular(8),
             ),
           child: ListTile(
-            leading: Icon(
-              Icons.event,
-              color: isEventTypesOpen ? AppTheme.goldColor : Colors.white70,
+            leading: SizedBox(
+              width: 24,
+              height: 24,
+              child: EnhancedIcon(
+                Icons.event,
+                size: 20,
+                color: isEventTypesOpen ? AppTheme.goldColor : Colors.white,
+              ),
             ),
             title: Text(
               'Event Types',
@@ -366,9 +390,14 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
             trailing: AnimatedRotation(
               turns: isEventTypesOpen ? 0.5 : 0.0,
               duration: const Duration(milliseconds: 300),
-              child: Icon(
-                Icons.keyboard_arrow_down,
-                color: isEventTypesOpen ? AppTheme.goldColor : Colors.white70,
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: EnhancedIcon(
+                  Icons.expand_more,
+                  size: 20,
+                  color: isEventTypesOpen ? AppTheme.goldColor : Colors.white,
+                ),
               ),
             ),
             onTap: _toggleEventTypes,
@@ -420,49 +449,64 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
       margin: isSubItem
           ? const EdgeInsets.only(left: 8.0, right: 4.0)
           : EdgeInsets.zero,
-      decoration: BoxDecoration(
+      child: Material(
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(8),
-        color: isSelected
-            ? AppTheme.goldColor.withValues(alpha: 0.15)
-            : Colors.transparent,
-      ),
-      child: ListTile(
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: isSubItem ? 12.0 : 16.0,
-          vertical: 0,
-        ),
-        leading: Icon(
-          icon,
-          size: isSubItem ? 18 : 24,
-          color: isSelected ? AppTheme.goldColor : (color ?? Colors.white70),
-        ),
-        title: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? AppTheme.goldColor : Colors.white70,
-            fontSize: isSubItem ? 13 : 14,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-          ),
-        ),
-        onTap: () {
-          // Don't refresh if already on the same page
-          if (path == widget.currentPage) return;
-
-          final index = eventTypes.indexWhere((type) => type['path'] == path);
-          if (index != -1) {
-            widget.onItemSelected(index);
-          }
-
-          // Only close sidebar on mobile/tablet, not desktop
-          if (!widget.isDesktop) {
-            widget.onCloseSidebar();
-          }
-
-          // Navigate to the new page
-          Navigator.pushNamed(context, path);
-        },
-        shape: RoundedRectangleBorder(
+        child: InkWell(
           borderRadius: BorderRadius.circular(8),
+          hoverColor: AppTheme.goldColor.withValues(alpha: 0.1),
+          splashColor: AppTheme.goldColor.withValues(alpha: 0.2),
+          onTap: () {
+            // Don't refresh if already on the same page
+            if (path == widget.currentPage) return;
+
+            final index = eventTypes.indexWhere((type) => type['path'] == path);
+            if (index != -1) {
+              widget.onItemSelected(index);
+            }
+
+            // Only close sidebar on mobile/tablet, not desktop
+            if (!widget.isDesktop) {
+              widget.onCloseSidebar();
+            }
+
+            // Navigate to the new page using navigation guard to prevent loops
+            NavigationGuard.replaceTo(context, path);
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: isSelected
+                  ? AppTheme.goldColor.withValues(alpha: 0.15)
+                  : Colors.transparent,
+            ),
+            child: ListTile(
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: isSubItem ? 12.0 : 16.0,
+                vertical: 0,
+              ),
+              leading: SizedBox(
+                width: isSubItem ? 18 : 24,
+                height: isSubItem ? 18 : 24,
+                child: EnhancedIcon(
+                  icon,
+                  size: isSubItem ? 16 : 20,
+                  color: isSelected
+                      ? AppTheme.goldColor
+                      : (color ?? Colors.white),
+                  semanticLabel: label,
+                ),
+              ),
+              title: Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? AppTheme.goldColor : Colors.white70,
+                  fontSize: isSubItem ? 13 : 14,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -490,11 +534,11 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                 userEmail: userEmail,
                 onProfileTap: () {
                   if (!widget.isDesktop) widget.onCloseSidebar();
-                  Navigator.pushNamed(context, '/profile');
+                  NavigationGuard.replaceTo(context, '/profile');
                 },
                 onSettingsTap: () {
                   if (!widget.isDesktop) widget.onCloseSidebar();
-                  Navigator.pushNamed(context, '/settings');
+                  NavigationGuard.replaceTo(context, '/settings');
                 },
                 onLogoutTap: () async {
                   if (!widget.isDesktop) widget.onCloseSidebar();
@@ -547,10 +591,14 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                 ),
 
                 // Dropdown Arrow
-                const Icon(
-                  Icons.keyboard_arrow_up,
-                  color: Colors.white70,
-                  size: 20,
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: EnhancedIcon(
+                    Icons.expand_less,
+                    color: Colors.white,
+                    size: 18,
+                  ),
                 ),
               ],
             ),
@@ -590,10 +638,14 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                       builder: (context, child) {
                         return Opacity(
                           opacity: _blinkAnimation.value,
-                          child: const Icon(
-                            Icons.help_outline,
-                            size: 24,
-                            color: AppTheme.goldColor,
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: const EnhancedIcon(
+                              Icons.help,
+                              size: 20,
+                              color: AppTheme.goldColor,
+                            ),
                           ),
                         );
                       },

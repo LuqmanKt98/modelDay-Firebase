@@ -15,6 +15,10 @@ body {
   -ms-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  /* Suppress Noto font warnings by providing comprehensive fallbacks */
+  font-synthesis: weight style;
+  text-rendering: optimizeLegibility;
 }
 
 /* Flutter app container - ensure it takes full viewport */
@@ -53,6 +57,17 @@ flt-scene-host {
   html {
     font-size: 16px;
   }
+}
+
+/* Suppress font warnings by providing comprehensive character support */
+* {
+  font-variant-ligatures: none;
+  font-feature-settings: normal;
+}
+
+/* Ensure all text elements use system fonts with proper fallbacks */
+flt-scene-host, flt-semantics, flt-semantics-container {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif !important;
 }
 
 /* Mobile specific fixes */

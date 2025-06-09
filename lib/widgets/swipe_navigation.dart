@@ -65,28 +65,40 @@ class _SwipeNavigationState extends State<SwipeNavigation> {
   }
 
   void _navigateToPreviousPage() {
+    debugPrint('👈 SwipeNavigation._navigateToPreviousPage() called');
     if (widget.onSwipeRight != null) {
+      debugPrint('🔄 SwipeNavigation - Using custom onSwipeRight callback');
       widget.onSwipeRight!();
       return;
     }
 
     final currentIndex = _pageOrder.indexOf(widget.currentRoute);
+    debugPrint('🔍 Current route: ${widget.currentRoute}, index: $currentIndex');
     if (currentIndex > 0) {
       final previousRoute = _pageOrder[currentIndex - 1];
+      debugPrint('➡️ SwipeNavigation - Navigating to previous: $previousRoute');
       Navigator.pushReplacementNamed(context, previousRoute);
+    } else {
+      debugPrint('❌ SwipeNavigation - No previous route available');
     }
   }
 
   void _navigateToNextPage() {
+    debugPrint('👉 SwipeNavigation._navigateToNextPage() called');
     if (widget.onSwipeLeft != null) {
+      debugPrint('🔄 SwipeNavigation - Using custom onSwipeLeft callback');
       widget.onSwipeLeft!();
       return;
     }
 
     final currentIndex = _pageOrder.indexOf(widget.currentRoute);
+    debugPrint('🔍 Current route: ${widget.currentRoute}, index: $currentIndex');
     if (currentIndex >= 0 && currentIndex < _pageOrder.length - 1) {
       final nextRoute = _pageOrder[currentIndex + 1];
+      debugPrint('➡️ SwipeNavigation - Navigating to next: $nextRoute');
       Navigator.pushReplacementNamed(context, nextRoute);
+    } else {
+      debugPrint('❌ SwipeNavigation - No next route available');
     }
   }
 

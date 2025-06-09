@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:provider/provider.dart';
 import 'package:new_flutter/services/auth_service.dart';
-import 'package:new_flutter/services/jobs_service.dart';
-import 'package:new_flutter/services/shootings_service.dart';
-import 'package:new_flutter/services/polaroids_service.dart';
-import 'package:new_flutter/services/meetings_service.dart';
 import 'package:new_flutter/theme/app_theme.dart';
 import 'package:new_flutter/widgets/app_layout.dart';
-
+import 'package:new_flutter/widgets/calendar_preview_widget.dart';
 import 'package:new_flutter/widgets/onboarding/welcome_guide.dart';
 
 class WelcomePage extends StatefulWidget {
@@ -18,22 +15,34 @@ class WelcomePage extends StatefulWidget {
 }
 
 class _WelcomePageState extends State<WelcomePage> {
-  int totalShootings = 0;
-  int totalPolaroids = 0;
-  int upcomingMeetings = 0;
-  int totalJobs = 0;
-  bool isLoading = true;
+  bool _onboardingChecked = false;
 
   @override
   void initState() {
     super.initState();
-    _checkOnboardingStatus();
-    _loadDashboardData();
+    debugPrint('🎉 WelcomePage.initState() called');
+    _initializeWelcomePage();
+  }
+
+  Future<void> _initializeWelcomePage() async {
+    debugPrint('🔄 WelcomePage._initializeWelcomePage() called');
+    debugPrint('🔍 WelcomePage - onboardingChecked: $_onboardingChecked');
+
+    // Only initialize once
+    if (_onboardingChecked) {
+      debugPrint('✅ WelcomePage - Already initialized, skipping');
+      return;
+    }
+
+    debugPrint('🎯 WelcomePage - Checking onboarding status...');
+    await _checkOnboardingStatus();
+    _onboardingChecked = true;
+    debugPrint('✅ WelcomePage - Onboarding check complete');
   }
 
   Future<void> _checkOnboardingStatus() async {
     try {
-      final authService = AuthService();
+      final authService = context.read<AuthService>();
       final user = authService.currentUser;
 
       if (user != null) {
@@ -60,127 +69,40 @@ class _WelcomePageState extends State<WelcomePage> {
     }
   }
 
-  String _getUserDisplayName() {
-    final authService = AuthService();
-    final user = authService.currentUser;
 
-    if (user?.displayName != null && user!.displayName!.isNotEmpty) {
-      return user.displayName!;
-    }
 
-    if (user?.email != null) {
-      // Fallback to username from email if display name not available
-      return user!.email!.split('@').first;
-    }
 
-    return 'User';
-  }
 
-  Future<void> _loadDashboardData() async {
-    try {
-      final shootings = await ShootingsService.getShootings();
-      final polaroids = await PolaroidsService.getPolaroids();
-      final meetings = await MeetingsService.getUpcomingMeetings();
-      final jobs = await JobsService.list();
-
-      if (mounted) {
-        setState(() {
-          totalShootings = shootings.length;
-          totalPolaroids = polaroids.length;
-          upcomingMeetings = meetings.length;
-          totalJobs = jobs.length;
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error loading dashboard data: $e');
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
-    }
-  }
-
-  Widget _buildQuickAddEventButton() {
-    return Container(
+  Widget _buildLogOptionButton() {
+    return SizedBox(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppTheme.goldColor.withValues(alpha: 0.15),
-            AppTheme.goldColor.withValues(alpha: 0.05),
+      child: ElevatedButton(
+        onPressed: () {
+          _showEventTypeSelector();
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppTheme.goldColor,
+          foregroundColor: Colors.black,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.add, color: Colors.black),
+            const SizedBox(width: 8),
+            const Text(
+              'Log Option',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
           ],
         ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppTheme.goldColor.withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.goldColor.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.add_circle_outline,
-                  color: AppTheme.goldColor,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Quick Add Event',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Add a new job, casting, or other event',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white70,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  _showEventTypeSelector();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.goldColor,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  'Add Event',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     ).animate().fadeIn(duration: 800.ms, delay: 300.ms).slideY(begin: 0.2);
   }
@@ -221,7 +143,7 @@ class _WelcomePageState extends State<WelcomePage> {
                 _buildEventTypeChip('Test', Icons.camera, '/new-test'),
                 _buildEventTypeChip('Polaroids', Icons.photo_camera, '/new-polaroids'),
                 _buildEventTypeChip('Meeting', Icons.meeting_room, '/new-meeting'),
-                _buildEventTypeChip('Other', Icons.more_horiz, '/new-other'),
+                _buildEventTypeChip('Other', Icons.more_horiz, '/new-event'),
               ],
             ),
             const SizedBox(height: 20),
@@ -264,7 +186,9 @@ class _WelcomePageState extends State<WelcomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final user = AuthService().currentUser;
+    debugPrint('🏗️ WelcomePage.build() called');
+    final user = context.read<AuthService>().currentUser;
+    debugPrint('🔍 WelcomePage - Current user: ${user?.email ?? 'null'}');
 
     return Stack(
       children: [
@@ -323,34 +247,24 @@ class _WelcomePageState extends State<WelcomePage> {
                           RichText(
                             text: TextSpan(
                               children: [
-                                const TextSpan(
-                                  text: 'Welcome back,\n',
-                                  style: TextStyle(
-                                    fontSize: 32,
+                                TextSpan(
+                                  text: 'Welcome${user?.displayName != null ? ", ${user!.displayName}" : ""} to ',
+                                  style: const TextStyle(
+                                    fontSize: 28,
                                     fontWeight: FontWeight.w300,
                                     color: Colors.white70,
                                     height: 1.2,
                                     letterSpacing: 0.5,
                                   ),
                                 ),
-                                if (user?.email != null)
-                                  TextSpan(
-                                    text: _getUserDisplayName(),
-                                    style: const TextStyle(
-                                      fontSize: 42,
-                                      fontWeight: FontWeight.w900,
-                                      color: AppTheme.goldColor,
-                                      height: 1.1,
-                                      letterSpacing: -0.5,
-                                    ),
-                                  ),
                                 const TextSpan(
-                                  text: '!',
+                                  text: 'ModelDay',
                                   style: TextStyle(
-                                    fontSize: 42,
+                                    fontSize: 32,
                                     fontWeight: FontWeight.w900,
                                     color: AppTheme.goldColor,
                                     height: 1.1,
+                                    letterSpacing: -0.5,
                                   ),
                                 ),
                               ],
@@ -361,9 +275,9 @@ class _WelcomePageState extends State<WelcomePage> {
 
                           // Subtitle
                           Text(
-                            'Ready to elevate your modeling career today?',
+                            'Your personal digital diary for modeling success',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 16,
                               fontWeight: FontWeight.w400,
                               color: Colors.white.withValues(alpha: 0.8),
                               letterSpacing: 0.3,
@@ -375,18 +289,33 @@ class _WelcomePageState extends State<WelcomePage> {
 
                     const SizedBox(height: 32),
 
-                    // Quick Add Event Button
-                    _buildQuickAddEventButton(),
+                    // Log Option Button
+                    _buildLogOptionButton(),
 
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 32),
 
-                    // Enhanced Stats Grid
-                    _buildStatsSection(),
+                    // Calendar Preview Section
+                    _buildCalendarPreviewSection(),
 
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 32),
 
-                    // Enhanced Recent Activity Section
-                    _buildRecentActivitySection(),
+                    // Community Board Button
+                    _buildCommunityBoardButton(),
+
+                    const SizedBox(height: 24),
+
+                    // View Options Dropdown
+                    _buildViewOptionsDropdown(),
+
+                    const SizedBox(height: 24),
+
+                    // ModelLog AI Button
+                    _buildModelLogAIButton(),
+
+                    const SizedBox(height: 32),
+
+                    // Navigation Options
+                    _buildNavigationOptions(),
                   ],
                 ),
               ),
@@ -397,386 +326,313 @@ class _WelcomePageState extends State<WelcomePage> {
     );
   }
 
-  Widget _buildStatsSection() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isSmallScreen = constraints.maxWidth < 600;
-        final isMediumScreen = constraints.maxWidth < 900;
-
-        if (isSmallScreen) {
-          // Mobile: 2x2 grid with enhanced design
-          return Column(
-            children: [
-              Row(
-                children: [
-                  Expanded(child: _buildStatCard(
-                    icon: Icons.camera_alt,
-                    label: 'Shootings',
-                    value: isLoading ? '...' : totalShootings.toString(),
-                    color: Colors.purple,
-                    isLoading: isLoading,
-                  )),
-                  const SizedBox(width: 12),
-                  Expanded(child: _buildStatCard(
-                    icon: Icons.image,
-                    label: 'Polaroids',
-                    value: isLoading ? '...' : totalPolaroids.toString(),
-                    color: Colors.blue,
-                    isLoading: isLoading,
-                  )),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(child: _buildStatCard(
-                    icon: Icons.calendar_today,
-                    label: 'Meetings',
-                    value: isLoading ? '...' : upcomingMeetings.toString(),
-                    color: Colors.green,
-                    isLoading: isLoading,
-                  )),
-                  const SizedBox(width: 12),
-                  Expanded(child: _buildStatCard(
-                    icon: Icons.work,
-                    label: 'Jobs',
-                    value: isLoading ? '...' : totalJobs.toString(),
-                    color: AppTheme.goldColor,
-                    isLoading: isLoading,
-                  )),
-                ],
-              ),
-            ],
-          );
-        } else if (isMediumScreen) {
-          // Tablet: 2x2 grid with larger cards
-          return Column(
-            children: [
-              Row(
-                children: [
-                  Expanded(child: _buildStatCard(
-                    icon: Icons.camera_alt,
-                    label: 'Total Shootings',
-                    value: isLoading ? '...' : totalShootings.toString(),
-                    color: Colors.purple,
-                    isLoading: isLoading,
-                  )),
-                  const SizedBox(width: 16),
-                  Expanded(child: _buildStatCard(
-                    icon: Icons.image,
-                    label: 'Polaroids',
-                    value: isLoading ? '...' : totalPolaroids.toString(),
-                    color: Colors.blue,
-                    isLoading: isLoading,
-                  )),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(child: _buildStatCard(
-                    icon: Icons.calendar_today,
-                    label: 'Upcoming Meetings',
-                    value: isLoading ? '...' : upcomingMeetings.toString(),
-                    color: Colors.green,
-                    isLoading: isLoading,
-                  )),
-                  const SizedBox(width: 16),
-                  Expanded(child: _buildStatCard(
-                    icon: Icons.work,
-                    label: 'Total Jobs',
-                    value: isLoading ? '...' : totalJobs.toString(),
-                    color: AppTheme.goldColor,
-                    isLoading: isLoading,
-                  )),
-                ],
-              ),
-            ],
-          );
-        } else {
-          // Desktop: Single row with 4 columns
-          return Row(
-            children: [
-              Expanded(child: _buildStatCard(
-                icon: Icons.camera_alt,
-                label: 'Total Shootings',
-                value: isLoading ? '...' : totalShootings.toString(),
-                color: Colors.purple,
-                isLoading: isLoading,
-              )),
-              const SizedBox(width: 16),
-              Expanded(child: _buildStatCard(
-                icon: Icons.image,
-                label: 'Polaroids',
-                value: isLoading ? '...' : totalPolaroids.toString(),
-                color: Colors.blue,
-                isLoading: isLoading,
-              )),
-              const SizedBox(width: 16),
-              Expanded(child: _buildStatCard(
-                icon: Icons.calendar_today,
-                label: 'Upcoming Meetings',
-                value: isLoading ? '...' : upcomingMeetings.toString(),
-                color: Colors.green,
-                isLoading: isLoading,
-              )),
-              const SizedBox(width: 16),
-              Expanded(child: _buildStatCard(
-                icon: Icons.work,
-                label: 'Total Jobs',
-                value: isLoading ? '...' : totalJobs.toString(),
-                color: AppTheme.goldColor,
-                isLoading: isLoading,
-              )),
-            ],
-          );
-        }
-      },
-    ).animate().fadeIn(duration: 800.ms, delay: 400.ms).slideY(begin: 0.3);
-  }
-
-  Widget _buildStatCard({
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-    required bool isLoading,
-  }) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isSmallCard = constraints.maxWidth < 200;
-
-        return Container(
-          height: isSmallCard ? 110 : 130,
-          padding: EdgeInsets.all(isSmallCard ? 12 : 16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                color.withValues(alpha: 0.1),
-                Colors.transparent,
-                color.withValues(alpha: 0.05),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: color.withValues(alpha: 0.3),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(alpha: 0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Icon container
-              Container(
-                padding: EdgeInsets.all(isSmallCard ? 6 : 8),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: isSmallCard ? 16 : 18,
-                ),
-              ),
-
-              // Spacer to push content to bottom
-              const Spacer(),
-
-              // Content area
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Value
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      isLoading ? '...' : value,
-                      style: TextStyle(
-                        fontSize: isSmallCard ? 20 : 24,
-                        fontWeight: FontWeight.w900,
-                        color: color,
-                        height: 1,
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: isSmallCard ? 2 : 4),
-
-                  // Label
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: isSmallCard ? 10 : 11,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white.withValues(alpha: 0.7),
-                      letterSpacing: 0.1,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildRecentActivitySection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Section Header
-        Row(
-          children: [
-            Container(
-              width: 4,
-              height: 24,
-              decoration: BoxDecoration(
-                color: AppTheme.goldColor,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'Recent Activity',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-                letterSpacing: -0.5,
-              ),
-            ),
-          ],
-        ).animate().fadeIn(duration: 800.ms, delay: 600.ms).slideX(begin: -0.3),
-
-        const SizedBox(height: 24),
-
-        // Activity Cards
-        Column(
-          children: [
-            _buildActivityCard(
-              icon: Icons.camera_alt,
-              title: 'New Shooting Added',
-              description: 'Fashion Editorial for Vogue',
-              time: '2 hours ago',
-              color: Colors.purple,
-              delay: 700,
-            ),
-            const SizedBox(height: 12),
-            _buildActivityCard(
-              icon: Icons.image,
-              title: 'Polaroids Updated',
-              description: 'Added 6 new polaroids',
-              time: '4 hours ago',
-              color: Colors.blue,
-              delay: 800,
-            ),
-            const SizedBox(height: 12),
-            _buildActivityCard(
-              icon: Icons.calendar_today,
-              title: 'Meeting Scheduled',
-              description: 'Meeting with Elite Models',
-              time: '1 day ago',
-              color: Colors.green,
-              delay: 900,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActivityCard({
-    required IconData icon,
-    required String title,
-    required String description,
-    required String time,
-    required Color color,
-    required int delay,
-  }) {
+  Widget _buildCalendarPreviewSection() {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.grey[900]!.withValues(alpha: 0.3),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.grey[800]!.withValues(alpha: 0.3),
+            Colors.grey[900]!.withValues(alpha: 0.1),
+          ],
+        ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.1),
           width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.calendar_month,
+                color: AppTheme.goldColor,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Your Schedule',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+              const Spacer(),
+              TextButton(
+                onPressed: () => Navigator.pushNamed(context, '/calendar'),
+                child: const Text(
+                  'View Full Calendar',
+                  style: TextStyle(
+                    color: AppTheme.goldColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const CalendarPreviewWidget(),
+        ],
+      ),
+    ).animate().fadeIn(duration: 800.ms, delay: 400.ms).slideY(begin: 0.2);
+  }
+
+  Widget _buildCommunityBoardButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () {
+          Navigator.pushNamed(context, '/community-board');
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.grey[800],
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.forum, color: Colors.white),
+            const SizedBox(width: 8),
+            const Text(
+              'Community Board',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 800.ms, delay: 500.ms).slideY(begin: 0.2);
+  }
+
+  Widget _buildViewOptionsDropdown() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.grey[800]!.withValues(alpha: 0.3),
+            Colors.grey[900]!.withValues(alpha: 0.1),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.1),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'View Options',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildViewOptionChip('Jobs', Icons.work, '/jobs'),
+              _buildViewOptionChip('Castings', Icons.person_search, '/castings'),
+              _buildViewOptionChip('Tests', Icons.camera, '/tests'),
+              _buildViewOptionChip('Shootings', Icons.camera_alt, '/shootings'),
+              _buildViewOptionChip('Polaroids', Icons.photo_camera, '/polaroids'),
+              _buildViewOptionChip('Meetings', Icons.meeting_room, '/meetings'),
+              _buildViewOptionChip('AI Jobs', Icons.smart_toy, '/ai-jobs'),
+            ],
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
+    ).animate().fadeIn(duration: 800.ms, delay: 600.ms).slideY(begin: 0.2);
+  }
+
+  Widget _buildViewOptionChip(String label, IconData icon, String route) {
+    return InkWell(
+      onTap: () => Navigator.pushNamed(context, route),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.grey[700]!.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: AppTheme.goldColor, size: 16),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-            child: Icon(
-              icon,
-              color: color,
-              size: 20,
-            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModelLogAIButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: () {
+          Navigator.pushNamed(context, '/ai-chat');
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppTheme.goldColor,
+          foregroundColor: Colors.black,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.white.withValues(alpha: 0.7),
-                  ),
-                ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.smart_toy, color: Colors.black),
+            const SizedBox(width: 8),
+            const Text(
+              'ModelDay',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 800.ms, delay: 700.ms).slideY(begin: 0.2);
+  }
+
+  Widget _buildNavigationOptions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Quick Navigation',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 16),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 3.2, // More rectangular for sleek look
+          children: [
+            _buildNavigationCard('Calendar', Icons.calendar_month, '/calendar'),
+            _buildNavigationCard('Track Jobs', Icons.work_outline, '/jobs'),
+            _buildNavigationCard('Network', Icons.people_outline, '/industry-contacts'),
+            _buildNavigationCard('Agent Form', Icons.person_outline, '/agents'),
+          ],
+        ),
+      ],
+    ).animate().fadeIn(duration: 800.ms, delay: 800.ms).slideY(begin: 0.2);
+  }
+
+  Widget _buildNavigationCard(String title, IconData icon, String route) {
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: () => Navigator.pushNamed(context, route),
+        borderRadius: BorderRadius.circular(16),
+        hoverColor: AppTheme.goldColor.withValues(alpha: 0.1),
+        splashColor: AppTheme.goldColor.withValues(alpha: 0.2),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.grey[850]!.withValues(alpha: 0.8),
+                Colors.grey[900]!.withValues(alpha: 0.6),
               ],
             ),
-          ),
-          Text(
-            time,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: Colors.white.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.08),
+              width: 1,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ],
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppTheme.goldColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  color: AppTheme.goldColor,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.3,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
-    ).animate().fadeIn(duration: 600.ms, delay: Duration(milliseconds: delay)).slideX(begin: 0.3);
+    );
   }
+
+
 
   void _showTourOverlay() {
     Navigator.of(context).push(

@@ -25,6 +25,7 @@ class _AppLayoutState extends State<AppLayout> {
   bool isSidebarOpen = false;
   bool _userHasCollapsedSidebar = false; // Track if user manually collapsed
   int selectedIndex = 0;
+  bool _initialSidebarSet = false;
 
   void _handleItemSelected(int index) {
     setState(() {
@@ -42,12 +43,13 @@ class _AppLayoutState extends State<AppLayout> {
 
 
 
-    // Set initial sidebar state for desktop (only if user hasn't manually collapsed it)
-    if (!isSidebarOpen && isDesktop && !_userHasCollapsedSidebar) {
+    // Set initial sidebar state for desktop (only once and if user hasn't manually collapsed it)
+    if (!isSidebarOpen && isDesktop && !_userHasCollapsedSidebar && !_initialSidebarSet) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           setState(() {
             isSidebarOpen = true;
+            _initialSidebarSet = true;
           });
         }
       });

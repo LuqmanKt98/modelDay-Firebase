@@ -461,7 +461,7 @@ class _NewAiJobPageState extends State<NewAiJobPage> {
             border: Border.all(color: const Color(0xFF2E2E2E)),
           ),
           child: DropdownButtonFormField<String>(
-            value: _selectedType,
+            value: _aiJobTypes.contains(_selectedType) ? _selectedType : null,
             decoration: const InputDecoration(
               border: InputBorder.none,
               contentPadding:
@@ -587,7 +587,7 @@ class _NewAiJobPageState extends State<NewAiJobPage> {
             border: Border.all(color: const Color(0xFF2E2E2E)),
           ),
           child: DropdownButtonFormField<String>(
-            value: _selectedStatus,
+            value: _statusOptions.contains(_selectedStatus) ? _selectedStatus : _statusOptions.first,
             decoration: const InputDecoration(
               border: InputBorder.none,
               contentPadding:
@@ -647,7 +647,7 @@ class _NewAiJobPageState extends State<NewAiJobPage> {
                   border: Border.all(color: const Color(0xFF2E2E2E)),
                 ),
                 child: DropdownButtonFormField<String>(
-                  value: _selectedCurrency,
+                  value: _currencies.contains(_selectedCurrency) ? _selectedCurrency : _currencies.first,
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     contentPadding:
@@ -698,7 +698,7 @@ class _NewAiJobPageState extends State<NewAiJobPage> {
             border: Border.all(color: const Color(0xFF2E2E2E)),
           ),
           child: DropdownButtonFormField<String>(
-            value: _selectedPaymentStatus,
+            value: _paymentStatusOptions.contains(_selectedPaymentStatus) ? _selectedPaymentStatus : null,
             decoration: const InputDecoration(
               border: InputBorder.none,
               contentPadding:

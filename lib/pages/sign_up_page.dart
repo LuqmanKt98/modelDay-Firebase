@@ -22,6 +22,9 @@ class _SignUpPageState extends State<SignUpPage> {
   String _error = '';
   int _passwordStrength = 0;
   List<String> _passwordFeedback = [];
+  bool _isLoading = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
@@ -83,7 +86,10 @@ class _SignUpPageState extends State<SignUpPage> {
       return;
     }
 
-    setState(() => _error = '');
+    setState(() {
+      _error = '';
+      _isLoading = true;
+    });
 
     try {
       await context.read<AuthService>().signUp(
@@ -91,26 +97,49 @@ class _SignUpPageState extends State<SignUpPage> {
             password: _passwordController.text,
             fullName: _fullNameController.text.trim(),
           );
+
+      // Navigate to welcome page after successful authentication
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/welcome');
       }
     } catch (e) {
-      setState(
-        () => _error = 'Could not create your account. Please try again.',
-      );
+      if (mounted) {
+        setState(() {
+          _error = 'Could not create your account. Please try again.';
+          _isLoading = false;
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   Future<void> _handleGoogleSignUp() async {
-    setState(() => _error = '');
+    setState(() {
+      _error = '';
+      _isLoading = true;
+    });
 
     try {
       await context.read<AuthService>().signInWithGoogle();
-      // Navigation will be handled by auth state changes
+
+      // Navigate to welcome page after successful authentication
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/welcome');
+      }
     } catch (e) {
-      setState(
-        () => _error = 'Failed to sign up with Google. Please try again.',
-      );
+      if (mounted) {
+        setState(() {
+          _error = 'Failed to sign up with Google. Please try again.';
+          _isLoading = false;
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -132,7 +161,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = context.watch<AuthService>().loading;
+    // Use local loading state instead of watching AuthService to prevent rebuilds
 
     return Scaffold(
       body: SafeArea(
@@ -238,7 +267,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
                             // Google Sign Up Button
                             OutlinedButton.icon(
-                              onPressed: isLoading ? null : _handleGoogleSignUp,
+                              onPressed: _isLoading ? null : _handleGoogleSignUp,
                               icon: const Icon(Icons.g_mobiledata, size: 20),
                               label: const Text('Sign up with Google'),
                               style: AppTheme.outlineButtonStyle,
@@ -335,8 +364,34 @@ class _SignUpPageState extends State<SignUpPage> {
                                         AppTheme.textFieldDecoration.copyWith(
                                       labelText: 'Password',
                                       hintText: '********',
+                                      suffixIcon: Container(
+                                        width: 48,
+                                        height: 48,
+                                        alignment: Alignment.center,
+                                        child: IconButton(
+                                          icon: Container(
+                                            width: 24,
+                                            height: 24,
+                                            alignment: Alignment.center,
+                                            child: Icon(
+                                              _obscurePassword
+                                                  ? Icons.visibility
+                                                  : Icons.visibility_off,
+                                              color: AppTheme.goldColor.withValues(alpha: 0.7),
+                                              size: 20,
+                                            ),
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              _obscurePassword = !_obscurePassword;
+                                            });
+                                          },
+                                          splashRadius: 20,
+                                          padding: EdgeInsets.zero,
+                                        ),
+                                      ),
                                     ),
-                                    obscureText: true,
+                                    obscureText: _obscurePassword,
                                     onChanged: _checkPasswordStrength,
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
@@ -391,8 +446,34 @@ class _SignUpPageState extends State<SignUpPage> {
                                         AppTheme.textFieldDecoration.copyWith(
                                       labelText: 'Confirm Password',
                                       hintText: '********',
+                                      suffixIcon: Container(
+                                        width: 48,
+                                        height: 48,
+                                        alignment: Alignment.center,
+                                        child: IconButton(
+                                          icon: Container(
+                                            width: 24,
+                                            height: 24,
+                                            alignment: Alignment.center,
+                                            child: Icon(
+                                              _obscureConfirmPassword
+                                                  ? Icons.visibility
+                                                  : Icons.visibility_off,
+                                              color: AppTheme.goldColor.withValues(alpha: 0.7),
+                                              size: 20,
+                                            ),
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              _obscureConfirmPassword = !_obscureConfirmPassword;
+                                            });
+                                          },
+                                          splashRadius: 20,
+                                          padding: EdgeInsets.zero,
+                                        ),
+                                      ),
                                     ),
-                                    obscureText: true,
+                                    obscureText: _obscureConfirmPassword,
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
                                         return 'Please confirm your password';
@@ -438,8 +519,8 @@ class _SignUpPageState extends State<SignUpPage> {
                                   ),
                                   const SizedBox(height: 24),
                                   ElevatedButton.icon(
-                                    onPressed: isLoading ? null : _handleSignUp,
-                                    icon: isLoading
+                                    onPressed: _isLoading ? null : _handleSignUp,
+                                    icon: _isLoading
                                         ? const SizedBox(
                                             width: 20,
                                             height: 20,
@@ -449,7 +530,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                           )
                                         : const Icon(Icons.person_add),
                                     label: Text(
-                                      isLoading
+                                      _isLoading
                                           ? 'Creating account...'
                                           : 'Create Account',
                                     ),

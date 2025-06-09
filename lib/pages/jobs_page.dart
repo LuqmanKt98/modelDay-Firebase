@@ -68,21 +68,27 @@ class _JobsPageState extends State<JobsPage> {
 
   Future<void> _loadJobs() async {
     try {
-      setState(() {
-        isLoading = true;
-        error = null;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = true;
+          error = null;
+        });
+      }
 
       final loadedJobs = await JobsService.getJobs();
-      setState(() {
-        jobs = loadedJobs;
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          jobs = loadedJobs;
+          isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        error = 'Failed to load jobs: $e';
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          error = 'Failed to load jobs: $e';
+          isLoading = false;
+        });
+      }
     }
   }
 
