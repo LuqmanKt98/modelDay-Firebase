@@ -33,24 +33,28 @@ class IndustryContact {
 
   factory IndustryContact.fromJson(Map<String, dynamic> json) {
     return IndustryContact(
-      id: json['id'],
+      id: json['id']?.toString(), // Ensure ID is a string
       createdDate: json['created_date'] != null
           ? DateTime.parse(json['created_date'])
-          : null,
+          : json['createdAt'] != null
+              ? (json['createdAt'] as dynamic).toDate()
+              : null,
       updatedDate: json['updated_date'] != null
           ? DateTime.parse(json['updated_date'])
-          : null,
-      createdBy: json['created_by'],
+          : json['updatedAt'] != null
+              ? (json['updatedAt'] as dynamic).toDate()
+              : null,
+      createdBy: json['created_by'] ?? json['userId'],
       isSample: json['is_sample'] ?? false,
-      name: json['name'] ?? '',
-      jobTitle: json['job_title'],
-      company: json['company'],
-      instagram: json['instagram'],
-      mobile: json['mobile'],
-      email: json['email'],
-      city: json['city'],
-      country: json['country'],
-      notes: json['notes'],
+      name: json['name']?.toString() ?? '',
+      jobTitle: json['job_title']?.toString(),
+      company: json['company']?.toString(),
+      instagram: json['instagram']?.toString(),
+      mobile: json['mobile']?.toString(),
+      email: json['email']?.toString(),
+      city: json['city']?.toString(),
+      country: json['country']?.toString(),
+      notes: json['notes']?.toString(),
     );
   }
 
@@ -105,5 +109,23 @@ class IndustryContact {
       country: country ?? this.country,
       notes: notes ?? this.notes,
     );
+  }
+
+  /// Check if this contact has a valid ID for operations like delete/update
+  bool get hasValidId => id != null && id!.isNotEmpty;
+
+  /// Get display name for the contact
+  String get displayName => name.isNotEmpty ? name : 'Unnamed Contact';
+
+  /// Get display company info
+  String get displayCompanyInfo {
+    final parts = <String>[];
+    if (jobTitle != null && jobTitle!.isNotEmpty) {
+      parts.add(jobTitle!);
+    }
+    if (company != null && company!.isNotEmpty) {
+      parts.add(company!);
+    }
+    return parts.join(' at ');
   }
 }

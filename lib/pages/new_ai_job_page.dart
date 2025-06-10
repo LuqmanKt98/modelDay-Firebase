@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:new_flutter/widgets/app_layout.dart';
 import 'package:new_flutter/widgets/ui/input.dart' as ui;
 import 'package:new_flutter/widgets/ui/button.dart';
+import 'package:new_flutter/widgets/ui/agent_dropdown.dart';
 import 'package:new_flutter/theme/app_theme.dart';
 import 'package:new_flutter/models/ai_job.dart';
 import 'package:new_flutter/services/ai_jobs_service.dart';
@@ -19,9 +20,9 @@ class _NewAiJobPageState extends State<NewAiJobPage> {
   final _clientNameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
-  final _bookingAgentController = TextEditingController();
   final _rateController = TextEditingController();
   final _notesController = TextEditingController();
+  String? _selectedAgentId;
 
   String _selectedType = 'text_to_image';
   String _selectedStatus = 'pending';
@@ -109,7 +110,7 @@ class _NewAiJobPageState extends State<NewAiJobPage> {
       _selectedCurrency = data['currency'] ?? 'USD';
       _notesController.text = data['notes'] ?? '';
       _descriptionController.text = data['description'] ?? '';
-      _bookingAgentController.text = data['bookingAgent'] ?? '';
+      _selectedAgentId = data['bookingAgent'];
       if (data['type'] != null && _aiJobTypes.contains(data['type'])) {
         _selectedType = data['type'];
       }
@@ -131,7 +132,7 @@ class _NewAiJobPageState extends State<NewAiJobPage> {
           _selectedType = aiJob.type ?? 'text_to_image';
           _descriptionController.text = aiJob.description ?? '';
           _locationController.text = aiJob.location ?? '';
-          _bookingAgentController.text = aiJob.bookingAgent ?? '';
+          _selectedAgentId = aiJob.bookingAgent;
           _selectedDate = aiJob.date ?? DateTime.now();
           _rateController.text = aiJob.rate?.toString() ?? '';
           _notesController.text = aiJob.notes ?? '';
@@ -170,7 +171,6 @@ class _NewAiJobPageState extends State<NewAiJobPage> {
     _clientNameController.dispose();
     _descriptionController.dispose();
     _locationController.dispose();
-    _bookingAgentController.dispose();
     _rateController.dispose();
     _notesController.dispose();
     super.dispose();
@@ -249,7 +249,7 @@ class _NewAiJobPageState extends State<NewAiJobPage> {
         type: _selectedType,
         description: _descriptionController.text,
         location: _locationController.text,
-        bookingAgent: _bookingAgentController.text,
+        bookingAgent: _selectedAgentId,
         date: _selectedDate,
         time: _formatTime(_startTime),
         rate: double.tryParse(_rateController.text),
@@ -365,9 +365,15 @@ class _NewAiJobPageState extends State<NewAiJobPage> {
               _buildSectionCard(
                 'Agent Information',
                 [
-                  ui.Input(
-                    label: 'Booking Agent',
-                    controller: _bookingAgentController,
+                  AgentDropdown(
+                    selectedAgentId: _selectedAgentId,
+                    labelText: 'Booking Agent',
+                    hintText: 'Select an agent',
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedAgentId = value;
+                      });
+                    },
                   ),
                 ],
               ),

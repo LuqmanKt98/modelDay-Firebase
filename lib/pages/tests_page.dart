@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/test.dart';
+import '../providers/tests_provider.dart';
 import '../widgets/app_layout.dart';
 import '../widgets/ui/badge.dart' as ui;
 import '../widgets/ui/input.dart' as ui;
@@ -15,9 +17,6 @@ class TestsPage extends StatefulWidget {
 }
 
 class _TestsPageState extends State<TestsPage> {
-  List<Test> tests = [];
-  bool isLoading = true;
-  String? error;
   String _viewMode = 'grid';
   String _selectedStatus = 'all';
   final _searchController = TextEditingController();
@@ -34,33 +33,15 @@ class _TestsPageState extends State<TestsPage> {
   @override
   void initState() {
     super.initState();
-    _loadTests();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<TestsProvider>().loadTests();
+    });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadTests() async {
-    try {
-      setState(() {
-        isLoading = true;
-        error = null;
-      });
-
-      final loadedTests = await Test.list();
-      setState(() {
-        tests = loadedTests;
-        isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        error = 'Failed to load tests: $e';
-        isLoading = false;
-      });
-    }
   }
 
   Color _getStatusColor(String status) {
@@ -101,6 +82,7 @@ class _TestsPageState extends State<TestsPage> {
     if (!mounted) return;
 
     final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final provider = context.read<TestsProvider>();
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -131,30 +113,17 @@ class _TestsPageState extends State<TestsPage> {
     if (!mounted) return;
 
     if (confirmed == true) {
-      try {
-        final success = await Test.delete(test.id);
-        if (success) {
-          await _loadTests();
-          if (mounted) {
-            scaffoldMessenger.showSnackBar(
-              const SnackBar(
-                content: Text('Test deleted successfully'),
-                backgroundColor: Colors.green,
-              ),
-            );
-          }
-        } else {
-          throw Exception('Failed to delete test');
-        }
-      } catch (e) {
-        if (mounted) {
-          scaffoldMessenger.showSnackBar(
-            SnackBar(
-              content: Text('Error deleting test: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+      final success = await provider.deleteTest(test.id);
+
+      if (mounted) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text(success
+                ? 'Test deleted successfully'
+                : provider.error ?? 'Error deleting test'),
+            backgroundColor: success ? Colors.green : Colors.red,
+          ),
+        );
       }
     }
   }
@@ -194,7 +163,7 @@ class _TestsPageState extends State<TestsPage> {
                             _selectedStatus = selected ? status : 'all';
                           });
                           Navigator.pop(context);
-                          _loadTests();
+                          // Filter will be applied automatically through provider
                         },
                       ))
                   .toList(),
@@ -232,7 +201,7 @@ class _TestsPageState extends State<TestsPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        test.description,
+                        test.description ?? 'No description',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Colors.grey[600],
                             ),
@@ -289,7 +258,7 @@ class _TestsPageState extends State<TestsPage> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    test.location,
+                    test.location ?? 'No location',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
@@ -299,7 +268,7 @@ class _TestsPageState extends State<TestsPage> {
             Text('Requirements', style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 4),
             Text(
-              test.requirements,
+              test.requirements ?? 'No requirements specified',
               style: Theme.of(context).textTheme.bodyMedium,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
@@ -362,7 +331,7 @@ class _TestsPageState extends State<TestsPage> {
     );
   }
 
-  Widget _buildTestsTable() {
+  Widget _buildTestsTable(TestsProvider provider) {
     return ui.Table(
       children: [
         ui.TableHead(
@@ -384,7 +353,7 @@ class _TestsPageState extends State<TestsPage> {
           ],
         ),
         ui.TableBody(
-          children: tests.map((test) {
+          children: provider.filteredTests.map((test) {
             return ui.TableRow(
               children: [
                 if (_columnVisibility['date']!)
@@ -398,13 +367,13 @@ class _TestsPageState extends State<TestsPage> {
                 if (_columnVisibility['description']!)
                   ui.TableCell(
                     child: Text(
-                      test.description,
+                      test.description ?? 'No description',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 if (_columnVisibility['location']!)
-                  ui.TableCell(child: Text(test.location)),
+                  ui.TableCell(child: Text(test.location ?? 'No location')),
                 if (_columnVisibility['status']!)
                   ui.TableCell(
                     child: ui.Badge(
@@ -450,88 +419,104 @@ class _TestsPageState extends State<TestsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return AppLayout(
-      currentPage: '/tests',
-      title: 'Tests',
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.add),
-          onPressed: () => Navigator.pushNamed(context, '/new-test'),
-        ),
-      ],
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: ui.Input(
-                    prefixIcon: const Icon(Icons.search),
-                    hintText: 'Search tests...',
-                    controller: _searchController,
-                    onChanged: (value) => setState(() {}),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Button(
-                  text: 'Filter',
-                  variant: ButtonVariant.outline,
-                  prefix: const Icon(Icons.filter_list),
-                  onPressed: () => _showFilterDialog(),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: Icon(
-                    _viewMode == 'grid' ? Icons.view_list : Icons.grid_view,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _viewMode = _viewMode == 'grid' ? 'list' : 'grid';
-                    });
-                  },
-                ),
-              ],
+    return Consumer<TestsProvider>(
+      builder: (context, provider, child) {
+        return AppLayout(
+          currentPage: '/tests',
+          title: 'Tests',
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () async {
+                final result = await Navigator.pushNamed(context, '/new-test');
+                if (result == true) {
+                  provider.loadTests();
+                }
+              },
             ),
-          ),
-          if (isLoading)
-            const Center(child: CircularProgressIndicator())
-          else if (error != null)
-            Center(child: Text(error!))
-          else if (tests.isEmpty)
-            const Center(child: Text('No tests found'))
-          else if (_viewMode == 'grid')
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  int crossAxisCount = 3;
-                  if (constraints.maxWidth < 900) crossAxisCount = 2;
-                  if (constraints.maxWidth < 600) crossAxisCount = 1;
-
-                  return GridView.builder(
-                    padding: const EdgeInsets.all(0),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: crossAxisCount,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 1.2, // Adjusted for better content fit
-                    ),
-                    itemCount: tests.length,
-                    itemBuilder: (context, index) =>
-                        _buildTestCard(tests[index]),
-                  );
-                },
-              ),
-            )
-          else
-            Expanded(
-              child: SingleChildScrollView(
+          ],
+          child: Column(
+            children: [
+              Padding(
                 padding: const EdgeInsets.all(16),
-                child: _buildTestsTable(),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ui.Input(
+                        prefixIcon: const Icon(Icons.search),
+                        hintText: 'Search tests...',
+                        controller: _searchController,
+                        onChanged: (value) => provider.setSearchTerm(value),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Button(
+                      text: 'Filter',
+                      variant: ButtonVariant.outline,
+                      prefix: const Icon(Icons.filter_list),
+                      onPressed: () => _showFilterDialog(),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: Icon(
+                        _viewMode == 'grid' ? Icons.view_list : Icons.grid_view,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _viewMode = _viewMode == 'grid' ? 'list' : 'grid';
+                        });
+                      },
+                    ),
+                  ],
+                ),
               ),
-            ),
-        ],
-      ),
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: provider.refresh,
+                  child: provider.isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : provider.error != null
+                          ? Center(child: Text(provider.error!))
+                          : provider.filteredTests.isEmpty
+                              ? const Center(child: Text('No tests found'))
+                              : _viewMode == 'grid'
+                                  ? LayoutBuilder(
+                                      builder: (context, constraints) {
+                                        int crossAxisCount = 3;
+                                        if (constraints.maxWidth < 900) {
+                                          crossAxisCount = 2;
+                                        }
+                                        if (constraints.maxWidth < 600) {
+                                          crossAxisCount = 1;
+                                        }
+
+                                        return GridView.builder(
+                                          padding: const EdgeInsets.all(0),
+                                          gridDelegate:
+                                              SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: crossAxisCount,
+                                            crossAxisSpacing: 16,
+                                            mainAxisSpacing: 16,
+                                            childAspectRatio: 1.2,
+                                          ),
+                                          itemCount:
+                                              provider.filteredTests.length,
+                                          itemBuilder: (context, index) =>
+                                              _buildTestCard(provider
+                                                  .filteredTests[index]),
+                                        );
+                                      },
+                                    )
+                                  : SingleChildScrollView(
+                                      padding: const EdgeInsets.all(16),
+                                      child: _buildTestsTable(provider),
+                                    ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

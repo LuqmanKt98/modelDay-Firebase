@@ -110,36 +110,55 @@ class Button extends StatelessWidget {
                 ? Border.fromBorderSide(getBorder()!)
                 : null,
           ),
-          child: Row(
-            mainAxisSize: width == null ? MainAxisSize.min : MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (prefix != null && !isLoading) ...[
-                prefix!,
-                const SizedBox(width: AppTheme.spacingSm),
-              ],
-              if (isLoading) ...[
-                SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(getTextColor()),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return Row(
+                mainAxisSize:
+                    width == null ? MainAxisSize.min : MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (prefix != null &&
+                      !isLoading &&
+                      constraints.maxWidth > 80) ...[
+                    prefix!,
+                    const SizedBox(width: AppTheme.spacingSm),
+                  ],
+                  if (isLoading) ...[
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(getTextColor()),
+                      ),
+                    ),
+                    if (constraints.maxWidth > 60)
+                      const SizedBox(width: AppTheme.spacingSm),
+                  ],
+                  Flexible(
+                    child: DefaultTextStyle(
+                      style: AppTheme.labelLarge.copyWith(
+                        color: getTextColor(),
+                        fontSize: constraints.maxWidth < 80 ? 12 : null,
+                      ),
+                      child: child ??
+                          Text(
+                            text!,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                    ),
                   ),
-                ),
-                const SizedBox(width: AppTheme.spacingSm),
-              ],
-              DefaultTextStyle(
-                style: AppTheme.labelLarge.copyWith(
-                  color: getTextColor(),
-                ),
-                child: child ?? Text(text!),
-              ),
-              if (suffix != null && !isLoading) ...[
-                const SizedBox(width: AppTheme.spacingSm),
-                suffix!,
-              ],
-            ],
+                  if (suffix != null &&
+                      !isLoading &&
+                      constraints.maxWidth > 80) ...[
+                    const SizedBox(width: AppTheme.spacingSm),
+                    suffix!,
+                  ],
+                ],
+              );
+            },
           ),
         ),
       ),

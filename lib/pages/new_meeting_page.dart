@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:new_flutter/widgets/app_layout.dart';
 import 'package:new_flutter/widgets/ui/input.dart' as ui;
 import 'package:new_flutter/widgets/ui/button.dart';
+import 'package:new_flutter/widgets/ui/agent_dropdown.dart';
 import 'package:new_flutter/theme/app_theme.dart';
 import 'package:new_flutter/models/meeting.dart';
 import 'package:new_flutter/services/meetings_service.dart';
@@ -26,6 +27,7 @@ class _NewMeetingPageState extends State<NewMeetingPage> {
   DateTime _selectedDate = DateTime.now();
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
+  String? _selectedAgentId;
   bool _isCustomType = false;
   bool _isLoading = false;
   bool _isEditing = false;
@@ -86,6 +88,7 @@ class _NewMeetingPageState extends State<NewMeetingPage> {
       }
       _locationController.text = data['location'] ?? '';
       _notesController.text = data['notes'] ?? '';
+      _selectedAgentId = data['bookingAgent'];
       if (data['meetingType'] != null && data['meetingType'].isNotEmpty) {
         if (_meetingTypes.contains(data['meetingType'])) {
           _selectedMeetingType = data['meetingType'];
@@ -115,6 +118,7 @@ class _NewMeetingPageState extends State<NewMeetingPage> {
           _selectedDate = DateTime.tryParse(meeting.date) ?? DateTime.now();
           _notesController.text = meeting.notes ?? '';
           _selectedStatus = meeting.status ?? 'scheduled';
+          _selectedAgentId = meeting.bookingAgent;
 
           // Parse time strings
           if (meeting.time != null && meeting.time!.isNotEmpty) {
@@ -241,6 +245,7 @@ class _NewMeetingPageState extends State<NewMeetingPage> {
         time: _formatTime(_startTime),
         endTime: _formatTime(_endTime),
         location: _locationController.text,
+        bookingAgent: _selectedAgentId,
         notes: _notesController.text,
         status: _selectedStatus,
       );
@@ -312,6 +317,17 @@ class _NewMeetingPageState extends State<NewMeetingPage> {
                   ui.Input(
                     label: 'Location',
                     controller: _locationController,
+                  ),
+                  const SizedBox(height: 16),
+                  AgentDropdown(
+                    selectedAgentId: _selectedAgentId,
+                    labelText: 'Booking Agent',
+                    hintText: 'Select an agent',
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedAgentId = value;
+                      });
+                    },
                   ),
                 ],
               ),

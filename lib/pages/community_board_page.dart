@@ -4,6 +4,7 @@ import 'package:new_flutter/theme/app_theme.dart';
 import 'package:new_flutter/widgets/app_layout.dart';
 import 'package:new_flutter/models/community_post.dart';
 import 'package:new_flutter/services/community_service.dart';
+import 'package:new_flutter/pages/community_post_detail_page.dart';
 
 class CommunityBoardPage extends StatefulWidget {
   const CommunityBoardPage({super.key});
@@ -86,11 +87,16 @@ class _CommunityBoardPageState extends State<CommunityBoardPage> {
     setState(() {
       _filteredPosts = _posts.where((post) {
         final matchesSearch = _searchController.text.isEmpty ||
-            post.content.toLowerCase().contains(_searchController.text.toLowerCase()) ||
-            post.authorName.toLowerCase().contains(_searchController.text.toLowerCase());
+            post.content
+                .toLowerCase()
+                .contains(_searchController.text.toLowerCase()) ||
+            post.authorName
+                .toLowerCase()
+                .contains(_searchController.text.toLowerCase());
 
         final matchesCategory = _selectedCategory == 'All Categories' ||
-            post.tags.contains(_selectedCategory.toLowerCase().replaceAll(' ', '_'));
+            post.tags
+                .contains(_selectedCategory.toLowerCase().replaceAll(' ', '_'));
 
         return matchesSearch && matchesCategory;
       }).toList();
@@ -128,7 +134,9 @@ class _CommunityBoardPageState extends State<CommunityBoardPage> {
       await CommunityService.createPost(
         content,
         category: _selectedCategory,
-        location: _locationController.text.isNotEmpty ? _locationController.text : null,
+        location: _locationController.text.isNotEmpty
+            ? _locationController.text
+            : null,
         date: _dateController.text.isNotEmpty ? _dateController.text : null,
         time: _timeController.text.isNotEmpty ? _timeController.text : null,
         contactMethod: _selectedContactMethod,
@@ -180,7 +188,9 @@ class _CommunityBoardPageState extends State<CommunityBoardPage> {
 
   void _showNewPostDialog() {
     final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
     final isMobile = screenWidth <= 768;
+    final isSmallMobile = screenWidth < 360;
 
     showDialog(
       context: context,
@@ -191,12 +201,14 @@ class _CommunityBoardPageState extends State<CommunityBoardPage> {
         ),
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            maxWidth: isMobile ? screenWidth * 0.95 : 600,
-            maxHeight: MediaQuery.of(context).size.height * (isMobile ? 0.9 : 0.8),
+            maxWidth: isMobile
+                ? (isSmallMobile ? screenWidth * 0.98 : screenWidth * 0.95)
+                : 600,
+            maxHeight: screenHeight * (isMobile ? 0.92 : 0.8),
           ),
           child: Container(
             width: isMobile ? double.infinity : 600,
-            padding: EdgeInsets.all(isMobile ? 16 : 24),
+            padding: EdgeInsets.all(isMobile ? (isSmallMobile ? 12 : 16) : 24),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -230,474 +242,580 @@ class _CommunityBoardPageState extends State<CommunityBoardPage> {
                   ),
                   const SizedBox(height: 24),
 
-              // Title
-              const Text(
-                'Title',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _titleController,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'What are you looking for?',
-                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-                  filled: true,
-                  fillColor: Colors.grey[800]!.withValues(alpha: 0.5),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.all(12),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Category
-              const Text(
-                'Category',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                value: _selectedCategory == 'All Categories' ? _categories[1] : _selectedCategory,
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCategory = value!;
-                  });
-                },
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.grey[800]!.withValues(alpha: 0.5),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.all(12),
-                ),
-                dropdownColor: Colors.grey[800],
-                items: _categories.skip(1).map((category) {
-                  return DropdownMenuItem(
-                    value: category,
-                    child: Text(category, style: const TextStyle(color: Colors.white)),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 16),
-
-              // Description
-              const Text(
-                'Description',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _descriptionController,
-                maxLines: 4,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Provide more details about your request...',
-                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-                  filled: true,
-                  fillColor: Colors.grey[800]!.withValues(alpha: 0.5),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.all(12),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Location and Date Row (responsive)
-              isMobile
-                ? Column(
-                    children: [
-                      // Location
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Location',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: _locationController,
-                            style: const TextStyle(color: Colors.white),
-                            decoration: InputDecoration(
-                              hintText: 'Where is this relevant to?',
-                              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-                              filled: true,
-                              fillColor: Colors.grey[800]!.withValues(alpha: 0.5),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide.none,
-                              ),
-                              contentPadding: const EdgeInsets.all(12),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // Date
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Date',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: _dateController,
-                            style: const TextStyle(color: Colors.white),
-                            decoration: InputDecoration(
-                              hintText: 'mm/dd/yyyy',
-                              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-                              filled: true,
-                              fillColor: Colors.grey[800]!.withValues(alpha: 0.5),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide.none,
-                              ),
-                              contentPadding: const EdgeInsets.all(12),
-                              suffixIcon: Icon(
-                                Icons.calendar_today,
-                                color: Colors.white.withValues(alpha: 0.5),
-                                size: 18,
-                              ),
-                            ),
-                            onTap: () async {
-                              final date = await showDatePicker(
-                                context: context,
-                                initialDate: DateTime.now(),
-                                firstDate: DateTime.now(),
-                                lastDate: DateTime.now().add(const Duration(days: 365)),
-                              );
-                              if (date != null) {
-                                _dateController.text = '${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}/${date.year}';
-                              }
-                            },
-                            readOnly: true,
-                          ),
-                        ],
-                      ),
-                    ],
-                  )
-                : Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Location',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            TextField(
-                              controller: _locationController,
-                              style: const TextStyle(color: Colors.white),
-                              decoration: InputDecoration(
-                                hintText: 'Where is this relevant to?',
-                                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-                                filled: true,
-                                fillColor: Colors.grey[800]!.withValues(alpha: 0.5),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide.none,
-                                ),
-                                contentPadding: const EdgeInsets.all(12),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Date',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            TextField(
-                              controller: _dateController,
-                              style: const TextStyle(color: Colors.white),
-                              decoration: InputDecoration(
-                                hintText: 'mm/dd/yyyy',
-                                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-                                filled: true,
-                                fillColor: Colors.grey[800]!.withValues(alpha: 0.5),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide.none,
-                                ),
-                                contentPadding: const EdgeInsets.all(12),
-                                suffixIcon: Icon(
-                                  Icons.calendar_today,
-                                  color: Colors.white.withValues(alpha: 0.5),
-                                  size: 18,
-                                ),
-                              ),
-                              onTap: () async {
-                                final date = await showDatePicker(
-                                  context: context,
-                                  initialDate: DateTime.now(),
-                                  firstDate: DateTime.now(),
-                                  lastDate: DateTime.now().add(const Duration(days: 365)),
-                                );
-                                if (date != null) {
-                                  _dateController.text = '${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}/${date.year}';
-                                }
-                              },
-                              readOnly: true,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-              const SizedBox(height: 16),
-
-              // Time and Contact Method Row (responsive)
-              isMobile
-                ? Column(
-                    children: [
-                      // Time
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Time (if applicable)',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          TextField(
-                            controller: _timeController,
-                            style: const TextStyle(color: Colors.white),
-                            decoration: InputDecoration(
-                              hintText: '--:-- --',
-                              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-                              filled: true,
-                              fillColor: Colors.grey[800]!.withValues(alpha: 0.5),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide.none,
-                              ),
-                              contentPadding: const EdgeInsets.all(12),
-                              suffixIcon: Icon(
-                                Icons.access_time,
-                                color: Colors.white.withValues(alpha: 0.5),
-                                size: 18,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // Contact Method
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Preferred Contact Method',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          DropdownButtonFormField<String>(
-                            value: _selectedContactMethod,
-                            onChanged: (value) {
-                              setState(() {
-                                _selectedContactMethod = value!;
-                              });
-                            },
-                            style: const TextStyle(color: Colors.white),
-                            decoration: InputDecoration(
-                              filled: true,
-                              fillColor: Colors.grey[800]!.withValues(alpha: 0.5),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide.none,
-                              ),
-                              contentPadding: const EdgeInsets.all(12),
-                            ),
-                            dropdownColor: Colors.grey[800],
-                            items: _contactMethods.map((method) {
-                              return DropdownMenuItem(
-                                value: method,
-                                child: Text(method, style: const TextStyle(color: Colors.white)),
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                      ),
-                    ],
-                  )
-                : Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Time (if applicable)',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            TextField(
-                              controller: _timeController,
-                              style: const TextStyle(color: Colors.white),
-                              decoration: InputDecoration(
-                                hintText: '--:-- --',
-                                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
-                                filled: true,
-                                fillColor: Colors.grey[800]!.withValues(alpha: 0.5),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide.none,
-                                ),
-                                contentPadding: const EdgeInsets.all(12),
-                                suffixIcon: Icon(
-                                  Icons.access_time,
-                                  color: Colors.white.withValues(alpha: 0.5),
-                                  size: 18,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Preferred Contact Method',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            DropdownButtonFormField<String>(
-                              value: _selectedContactMethod,
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedContactMethod = value!;
-                                });
-                              },
-                              style: const TextStyle(color: Colors.white),
-                              decoration: InputDecoration(
-                                filled: true,
-                                fillColor: Colors.grey[800]!.withValues(alpha: 0.5),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide.none,
-                                ),
-                                contentPadding: const EdgeInsets.all(12),
-                              ),
-                              dropdownColor: Colors.grey[800],
-                              items: _contactMethods.map((method) {
-                                return DropdownMenuItem(
-                                  value: method,
-                                  child: Text(method, style: const TextStyle(color: Colors.white)),
-                                );
-                              }).toList(),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-              const SizedBox(height: 24),
-
-              // Buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(color: Colors.white),
+                  // Title
+                  const Text(
+                    'Title',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: _isPosting ? null : () async {
-                      await _createPost();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.goldColor,
-                      foregroundColor: Colors.black,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      shape: RoundedRectangleBorder(
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _titleController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'What are you looking for?',
+                      hintStyle:
+                          TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+                      filled: true,
+                      fillColor: Colors.grey[800]!.withValues(alpha: 0.5),
+                      border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
                       ),
+                      contentPadding: const EdgeInsets.all(12),
                     ),
-                    child: _isPosting
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
-                            ),
-                          )
-                        : const Text(
-                            'Post',
-                            style: TextStyle(fontWeight: FontWeight.w600),
-                          ),
                   ),
-                ],
-              ),
+                  const SizedBox(height: 16),
+
+                  // Category
+                  const Text(
+                    'Category',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: _categories.skip(1).contains(
+                            _selectedCategory == 'All Categories'
+                                ? _categories[1]
+                                : _selectedCategory)
+                        ? (_selectedCategory == 'All Categories'
+                            ? _categories[1]
+                            : _selectedCategory)
+                        : null,
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCategory = value!;
+                      });
+                    },
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.grey[800]!.withValues(alpha: 0.5),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.all(12),
+                    ),
+                    dropdownColor: Colors.grey[800],
+                    items: _categories.skip(1).map((category) {
+                      return DropdownMenuItem(
+                        value: category,
+                        child: Text(category,
+                            style: const TextStyle(color: Colors.white)),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Description
+                  const Text(
+                    'Description',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _descriptionController,
+                    maxLines: 4,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      hintText: 'Provide more details about your request...',
+                      hintStyle:
+                          TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+                      filled: true,
+                      fillColor: Colors.grey[800]!.withValues(alpha: 0.5),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.all(12),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Location and Date Row (responsive)
+                  isMobile
+                      ? Column(
+                          children: [
+                            // Location
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Location',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                TextField(
+                                  controller: _locationController,
+                                  style: const TextStyle(color: Colors.white),
+                                  decoration: InputDecoration(
+                                    hintText: 'Where is this relevant to?',
+                                    hintStyle: TextStyle(
+                                        color: Colors.white
+                                            .withValues(alpha: 0.5)),
+                                    filled: true,
+                                    fillColor: Colors.grey[800]!
+                                        .withValues(alpha: 0.5),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    contentPadding: const EdgeInsets.all(12),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            // Date
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Date',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                TextField(
+                                  controller: _dateController,
+                                  style: const TextStyle(color: Colors.white),
+                                  decoration: InputDecoration(
+                                    hintText: 'mm/dd/yyyy',
+                                    hintStyle: TextStyle(
+                                        color: Colors.white
+                                            .withValues(alpha: 0.5)),
+                                    filled: true,
+                                    fillColor: Colors.grey[800]!
+                                        .withValues(alpha: 0.5),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    contentPadding: const EdgeInsets.all(12),
+                                    suffixIcon: Icon(
+                                      Icons.calendar_today,
+                                      color:
+                                          Colors.white.withValues(alpha: 0.5),
+                                      size: 18,
+                                    ),
+                                  ),
+                                  onTap: () async {
+                                    final date = await showDatePicker(
+                                      context: context,
+                                      initialDate: DateTime.now(),
+                                      firstDate: DateTime.now(),
+                                      lastDate: DateTime.now()
+                                          .add(const Duration(days: 365)),
+                                    );
+                                    if (date != null) {
+                                      _dateController.text =
+                                          '${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}/${date.year}';
+                                    }
+                                  },
+                                  readOnly: true,
+                                ),
+                              ],
+                            ),
+                          ],
+                        )
+                      : Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Location',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  TextField(
+                                    controller: _locationController,
+                                    style: const TextStyle(color: Colors.white),
+                                    decoration: InputDecoration(
+                                      hintText: 'Where is this relevant to?',
+                                      hintStyle: TextStyle(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.5)),
+                                      filled: true,
+                                      fillColor: Colors.grey[800]!
+                                          .withValues(alpha: 0.5),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      contentPadding: const EdgeInsets.all(12),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Date',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  TextField(
+                                    controller: _dateController,
+                                    style: const TextStyle(color: Colors.white),
+                                    decoration: InputDecoration(
+                                      hintText: 'mm/dd/yyyy',
+                                      hintStyle: TextStyle(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.5)),
+                                      filled: true,
+                                      fillColor: Colors.grey[800]!
+                                          .withValues(alpha: 0.5),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      contentPadding: const EdgeInsets.all(12),
+                                      suffixIcon: Icon(
+                                        Icons.calendar_today,
+                                        color:
+                                            Colors.white.withValues(alpha: 0.5),
+                                        size: 18,
+                                      ),
+                                    ),
+                                    onTap: () async {
+                                      final date = await showDatePicker(
+                                        context: context,
+                                        initialDate: DateTime.now(),
+                                        firstDate: DateTime.now(),
+                                        lastDate: DateTime.now()
+                                            .add(const Duration(days: 365)),
+                                      );
+                                      if (date != null) {
+                                        _dateController.text =
+                                            '${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}/${date.year}';
+                                      }
+                                    },
+                                    readOnly: true,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                  const SizedBox(height: 16),
+
+                  // Time and Contact Method Row (responsive)
+                  isMobile
+                      ? Column(
+                          children: [
+                            // Time
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Time (if applicable)',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                TextField(
+                                  controller: _timeController,
+                                  style: const TextStyle(color: Colors.white),
+                                  decoration: InputDecoration(
+                                    hintText: '--:-- --',
+                                    hintStyle: TextStyle(
+                                        color: Colors.white
+                                            .withValues(alpha: 0.5)),
+                                    filled: true,
+                                    fillColor: Colors.grey[800]!
+                                        .withValues(alpha: 0.5),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    contentPadding: const EdgeInsets.all(12),
+                                    suffixIcon: Icon(
+                                      Icons.access_time,
+                                      color:
+                                          Colors.white.withValues(alpha: 0.5),
+                                      size: 18,
+                                    ),
+                                  ),
+                                  onTap: () async {
+                                    final time = await showTimePicker(
+                                      context: context,
+                                      initialTime: TimeOfDay.now(),
+                                      builder: (context, child) {
+                                        return Theme(
+                                          data: Theme.of(context).copyWith(
+                                            colorScheme: const ColorScheme.dark(
+                                              primary: AppTheme.goldColor,
+                                              surface: Colors.black,
+                                            ),
+                                          ),
+                                          child: child!,
+                                        );
+                                      },
+                                    );
+                                    if (time != null && mounted) {
+                                      final hour = time.hourOfPeriod;
+                                      final minute = time.minute
+                                          .toString()
+                                          .padLeft(2, '0');
+                                      final period = time.period == DayPeriod.am
+                                          ? 'AM'
+                                          : 'PM';
+                                      _timeController.text =
+                                          '$hour:$minute $period';
+                                    }
+                                  },
+                                  readOnly: true,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            // Contact Method
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Preferred Contact Method',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                DropdownButtonFormField<String>(
+                                  value: _selectedContactMethod,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _selectedContactMethod = value!;
+                                    });
+                                  },
+                                  style: const TextStyle(color: Colors.white),
+                                  decoration: InputDecoration(
+                                    filled: true,
+                                    fillColor: Colors.grey[800]!
+                                        .withValues(alpha: 0.5),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    contentPadding: const EdgeInsets.all(12),
+                                  ),
+                                  dropdownColor: Colors.grey[800],
+                                  items: _contactMethods.map((method) {
+                                    return DropdownMenuItem(
+                                      value: method,
+                                      child: Text(method,
+                                          style: const TextStyle(
+                                              color: Colors.white)),
+                                    );
+                                  }).toList(),
+                                ),
+                              ],
+                            ),
+                          ],
+                        )
+                      : Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Time (if applicable)',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  TextField(
+                                    controller: _timeController,
+                                    style: const TextStyle(color: Colors.white),
+                                    decoration: InputDecoration(
+                                      hintText: '--:-- --',
+                                      hintStyle: TextStyle(
+                                          color: Colors.white
+                                              .withValues(alpha: 0.5)),
+                                      filled: true,
+                                      fillColor: Colors.grey[800]!
+                                          .withValues(alpha: 0.5),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      contentPadding: const EdgeInsets.all(12),
+                                      suffixIcon: Icon(
+                                        Icons.access_time,
+                                        color:
+                                            Colors.white.withValues(alpha: 0.5),
+                                        size: 18,
+                                      ),
+                                    ),
+                                    onTap: () async {
+                                      final time = await showTimePicker(
+                                        context: context,
+                                        initialTime: TimeOfDay.now(),
+                                        builder: (context, child) {
+                                          return Theme(
+                                            data: Theme.of(context).copyWith(
+                                              colorScheme:
+                                                  const ColorScheme.dark(
+                                                primary: AppTheme.goldColor,
+                                                surface: Colors.black,
+                                              ),
+                                            ),
+                                            child: child!,
+                                          );
+                                        },
+                                      );
+                                      if (time != null && mounted) {
+                                        final hour = time.hourOfPeriod;
+                                        final minute = time.minute
+                                            .toString()
+                                            .padLeft(2, '0');
+                                        final period =
+                                            time.period == DayPeriod.am
+                                                ? 'AM'
+                                                : 'PM';
+                                        _timeController.text =
+                                            '$hour:$minute $period';
+                                      }
+                                    },
+                                    readOnly: true,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Preferred Contact Method',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  DropdownButtonFormField<String>(
+                                    value: _selectedContactMethod,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _selectedContactMethod = value!;
+                                      });
+                                    },
+                                    style: const TextStyle(color: Colors.white),
+                                    decoration: InputDecoration(
+                                      filled: true,
+                                      fillColor: Colors.grey[800]!
+                                          .withValues(alpha: 0.5),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      contentPadding: const EdgeInsets.all(12),
+                                    ),
+                                    dropdownColor: Colors.grey[800],
+                                    items: _contactMethods.map((method) {
+                                      return DropdownMenuItem(
+                                        value: method,
+                                        child: Text(method,
+                                            style: const TextStyle(
+                                                color: Colors.white)),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                  const SizedBox(height: 24),
+
+                  // Buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: _isPosting
+                            ? null
+                            : () async {
+                                await _createPost();
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.goldColor,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: _isPosting
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.black),
+                                ),
+                              )
+                            : const Text(
+                                'Post',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -710,298 +828,333 @@ class _CommunityBoardPageState extends State<CommunityBoardPage> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth > 1024;
-    final isTablet = screenWidth > 768 && screenWidth <= 1024;
+    final isDesktop = screenWidth > 1200;
+    final isTablet = screenWidth > 768 && screenWidth <= 1200;
     final isMobile = screenWidth <= 768;
 
     return AppLayout(
       currentPage: '/community-board',
       title: 'Community Board',
       child: isMobile
-        ? _buildMobileLayout()
-        : Row(
-            children: [
-              // Left Sidebar - Filters (responsive width)
-              Container(
-                width: isDesktop ? 300 : (isTablet ? 250 : 200),
-                padding: EdgeInsets.all(isDesktop ? 16 : 12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[900]!.withValues(alpha: 0.5),
-                  border: Border(
-                    right: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      width: 1,
-                    ),
-                  ),
-                ),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Back to Home
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamedAndRemoveUntil(
-                        context,
-                        '/welcome',
-                        (route) => false,
-                      );
-                    },
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.arrow_back,
-                          color: Colors.white.withValues(alpha: 0.7),
-                          size: 16,
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            isDesktop ? 'Back to Home' : 'Back',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.7),
-                              fontSize: isDesktop ? 14 : 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: isDesktop ? 24 : 16),
+          ? _buildMobileLayout()
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final availableWidth = constraints.maxWidth;
+                final sidebarWidth = isDesktop
+                    ? (availableWidth * 0.25).clamp(280.0, 350.0)
+                    : isTablet
+                        ? (availableWidth * 0.3).clamp(240.0, 300.0)
+                        : 220.0;
 
-                  // Connect text
-                  if (isDesktop) ...[
-                    Text(
-                      'Connect with other models in your area',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.8),
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-
-                // Filters Section
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[800]!.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Filters',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Search
-                      const Text(
-                        'Search',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: _searchController,
-                        onChanged: (_) => _filterPosts(),
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
-                        decoration: InputDecoration(
-                          hintText: 'Search posts...',
-                          hintStyle: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
-                            fontSize: 14,
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[700]!.withValues(alpha: 0.5),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color: Colors.white.withValues(alpha: 0.5),
-                            size: 18,
+                return Row(
+                  children: [
+                    // Left Sidebar - Filters (responsive width)
+                    Container(
+                      width: sidebarWidth,
+                      padding: EdgeInsets.all(isDesktop ? 16 : 12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[900]!.withValues(alpha: 0.5),
+                        border: Border(
+                          right: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            width: 1,
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
-
-                      // Category
-                      const Text(
-                        'Category',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      DropdownButtonFormField<String>(
-                        value: _selectedCategory,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedCategory = value!;
-                          });
-                          _filterPosts();
-                        },
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.grey[700]!.withValues(alpha: 0.5),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                        ),
-                        dropdownColor: Colors.grey[800],
-                        items: _categories.map((category) {
-                          return DropdownMenuItem(
-                            value: category,
-                            child: Text(
-                              category,
-                              style: const TextStyle(color: Colors.white, fontSize: 14),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Status
-                      const Text(
-                        'Status',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[700]!.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          _selectedStatus,
-                          style: const TextStyle(color: Colors.white, fontSize: 14),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                ],
-              ),
-            ),
-          ),
-
-          // Main Content Area
-          Expanded(
-            child: Column(
-              children: [
-                // Header with New Post button
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      bottom: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        width: 1,
-                      ),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () => _showNewPostDialog(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.goldColor,
-                          foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'New Post',
-                          style: TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Posts List
-                Expanded(
-                  child: _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : _filteredPosts.isEmpty
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Back to Home
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.pushNamedAndRemoveUntil(
+                                  context,
+                                  '/welcome',
+                                  (route) => false,
+                                );
+                              },
+                              child: Row(
                                 children: [
                                   Icon(
-                                    Icons.forum_outlined,
-                                    size: 64,
-                                    color: Colors.white.withValues(alpha: 0.3),
+                                    Icons.arrow_back,
+                                    color: Colors.white.withValues(alpha: 0.7),
+                                    size: 16,
                                   ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'No posts found',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.white.withValues(alpha: 0.7),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Try adjusting your filters or create a new post',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white.withValues(alpha: 0.5),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      isDesktop ? 'Back to Home' : 'Back',
+                                      style: TextStyle(
+                                        color:
+                                            Colors.white.withValues(alpha: 0.7),
+                                        fontSize: isDesktop ? 14 : 12,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
-                            )
-                          : ListView.builder(
-                              padding: const EdgeInsets.all(16),
-                              itemCount: _filteredPosts.length,
-                              itemBuilder: (context, index) {
-                                final post = _filteredPosts[index];
-                                return _buildPostCard(post, index);
-                              },
                             ),
-                ),
-              ],
+                            SizedBox(height: isDesktop ? 24 : 16),
+
+                            // Connect text
+                            if (isDesktop) ...[
+                              Text(
+                                'Connect with other models in your area',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                            ],
+
+                            // Filters Section
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[800]!.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.1),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Filters',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // Search
+                                  const Text(
+                                    'Search',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  TextField(
+                                    controller: _searchController,
+                                    onChanged: (_) => _filterPosts(),
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 14),
+                                    decoration: InputDecoration(
+                                      hintText: 'Search posts...',
+                                      hintStyle: TextStyle(
+                                        color:
+                                            Colors.white.withValues(alpha: 0.5),
+                                        fontSize: 14,
+                                      ),
+                                      filled: true,
+                                      fillColor: Colors.grey[700]!
+                                          .withValues(alpha: 0.5),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 8,
+                                      ),
+                                      prefixIcon: Icon(
+                                        Icons.search,
+                                        color:
+                                            Colors.white.withValues(alpha: 0.5),
+                                        size: 18,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // Category
+                                  const Text(
+                                    'Category',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  DropdownButtonFormField<String>(
+                                    value:
+                                        _categories.contains(_selectedCategory)
+                                            ? _selectedCategory
+                                            : null,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _selectedCategory = value!;
+                                      });
+                                      _filterPosts();
+                                    },
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 14),
+                                    decoration: InputDecoration(
+                                      filled: true,
+                                      fillColor: Colors.grey[700]!
+                                          .withValues(alpha: 0.5),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 8,
+                                      ),
+                                    ),
+                                    dropdownColor: Colors.grey[800],
+                                    items: _categories.map((category) {
+                                      return DropdownMenuItem(
+                                        value: category,
+                                        child: Text(
+                                          category,
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // Status
+                                  const Text(
+                                    'Status',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[700]!
+                                          .withValues(alpha: 0.5),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      _selectedStatus,
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 14),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Main Content Area
+                    Expanded(
+                      child: Column(
+                        children: [
+                          // Header with New Post button
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: Colors.white.withValues(alpha: 0.1),
+                                  width: 1,
+                                ),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () => _showNewPostDialog(),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.goldColor,
+                                    foregroundColor: Colors.black,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20, vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'New Post',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Posts List
+                          Expanded(
+                            child: _isLoading
+                                ? const Center(
+                                    child: CircularProgressIndicator())
+                                : _filteredPosts.isEmpty
+                                    ? Center(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.forum_outlined,
+                                              size: 64,
+                                              color: Colors.white
+                                                  .withValues(alpha: 0.3),
+                                            ),
+                                            const SizedBox(height: 16),
+                                            Text(
+                                              'No posts found',
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w500,
+                                                color: Colors.white
+                                                    .withValues(alpha: 0.7),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              'Try adjusting your filters or create a new post',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.white
+                                                    .withValues(alpha: 0.5),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    : ListView.builder(
+                                        padding: const EdgeInsets.all(16),
+                                        itemCount: _filteredPosts.length,
+                                        itemBuilder: (context, index) {
+                                          final post = _filteredPosts[index];
+                                          return _buildPostCard(post, index);
+                                        },
+                                      ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1013,9 +1166,11 @@ class _CommunityBoardPageState extends State<CommunityBoardPage> {
 
     // Determine category based on tags or content
     String category = 'General';
-    if (post.tags.contains('roommate') || title.toLowerCase().contains('roommate')) {
+    if (post.tags.contains('roommate') ||
+        title.toLowerCase().contains('roommate')) {
       category = 'Looking for Roommate';
-    } else if (post.tags.contains('housing') || title.toLowerCase().contains('housing')) {
+    } else if (post.tags.contains('housing') ||
+        title.toLowerCase().contains('housing')) {
       category = 'Housing';
     }
 
@@ -1040,7 +1195,9 @@ class _CommunityBoardPageState extends State<CommunityBoardPage> {
                 radius: 16,
                 backgroundColor: AppTheme.goldColor,
                 child: Text(
-                  post.authorName.isNotEmpty ? post.authorName[0].toUpperCase() : 'G',
+                  post.authorName.isNotEmpty
+                      ? post.authorName[0].toUpperCase()
+                      : 'G',
                   style: const TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.bold,
@@ -1170,14 +1327,20 @@ class _CommunityBoardPageState extends State<CommunityBoardPage> {
               const Spacer(),
               TextButton(
                 onPressed: () {
-                  // Handle view/comment action
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CommunityPostDetailPage(post: post),
+                    ),
+                  );
                 },
                 style: TextButton.styleFrom(
                   foregroundColor: AppTheme.goldColor,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 ),
                 child: const Text(
-                  'active',
+                  'View Details',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -1188,17 +1351,21 @@ class _CommunityBoardPageState extends State<CommunityBoardPage> {
           ),
         ],
       ),
-    ).animate(delay: Duration(milliseconds: index * 100))
+    )
+        .animate(delay: Duration(milliseconds: index * 100))
         .fadeIn(duration: 600.ms)
         .slideX(begin: 0.2);
   }
 
   Widget _buildMobileLayout() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallMobile = screenWidth < 360;
+
     return Column(
       children: [
         // Mobile Header with filters toggle
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(isSmallMobile ? 12 : 16),
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
@@ -1210,30 +1377,35 @@ class _CommunityBoardPageState extends State<CommunityBoardPage> {
           child: Row(
             children: [
               // Back button
-              GestureDetector(
-                onTap: () {
-                  Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    '/welcome',
-                    (route) => false,
-                  );
-                },
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.arrow_back,
-                      color: Colors.white.withValues(alpha: 0.7),
-                      size: 16,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Back',
-                      style: TextStyle(
+              Flexible(
+                flex: 2,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/welcome',
+                      (route) => false,
+                    );
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.arrow_back,
                         color: Colors.white.withValues(alpha: 0.7),
-                        fontSize: 14,
+                        size: 16,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 6),
+                      if (!isSmallMobile)
+                        Text(
+                          'Back',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.7),
+                            fontSize: 14,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
               const Spacer(),
@@ -1241,21 +1413,32 @@ class _CommunityBoardPageState extends State<CommunityBoardPage> {
               IconButton(
                 onPressed: () => _showMobileFilters(),
                 icon: const Icon(Icons.filter_list, color: Colors.white),
+                padding: const EdgeInsets.all(6),
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                iconSize: 20,
               ),
+              const SizedBox(width: 8),
               // New Post button
-              ElevatedButton(
-                onPressed: () => _showNewPostDialog(),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.goldColor,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              Flexible(
+                flex: 2,
+                child: ElevatedButton(
+                  onPressed: () => _showNewPostDialog(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.goldColor,
+                    foregroundColor: Colors.black,
+                    padding: EdgeInsets.symmetric(
+                        horizontal: isSmallMobile ? 8 : 12, vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    minimumSize: const Size(0, 36),
                   ),
-                ),
-                child: const Text(
-                  'New Post',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
+                  child: Text(
+                    isSmallMobile ? 'Post' : 'New Post',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: isSmallMobile ? 11 : 12),
+                  ),
                 ),
               ),
             ],
@@ -1349,7 +1532,8 @@ class _CommunityBoardPageState extends State<CommunityBoardPage> {
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
                 hintText: 'Search posts...',
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+                hintStyle:
+                    TextStyle(color: Colors.white.withValues(alpha: 0.5)),
                 filled: true,
                 fillColor: Colors.grey[700]!.withValues(alpha: 0.5),
                 border: OutlineInputBorder(
@@ -1375,7 +1559,9 @@ class _CommunityBoardPageState extends State<CommunityBoardPage> {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: _selectedCategory,
+              value: _categories.contains(_selectedCategory)
+                  ? _selectedCategory
+                  : null,
               onChanged: (value) {
                 setState(() {
                   _selectedCategory = value!;
@@ -1395,7 +1581,8 @@ class _CommunityBoardPageState extends State<CommunityBoardPage> {
               items: _categories.map((category) {
                 return DropdownMenuItem(
                   value: category,
-                  child: Text(category, style: const TextStyle(color: Colors.white)),
+                  child: Text(category,
+                      style: const TextStyle(color: Colors.white)),
                 );
               }).toList(),
             ),
@@ -1407,20 +1594,24 @@ class _CommunityBoardPageState extends State<CommunityBoardPage> {
   }
 
   Widget _buildMobilePostCard(CommunityPost post, int index) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallMobile = screenWidth < 360;
     final lines = post.content.split('\n');
     final title = lines.isNotEmpty ? lines[0] : 'Untitled';
     final description = lines.length > 1 ? lines.skip(1).join('\n').trim() : '';
 
     String category = 'General';
-    if (post.tags.contains('roommate') || title.toLowerCase().contains('roommate')) {
+    if (post.tags.contains('roommate') ||
+        title.toLowerCase().contains('roommate')) {
       category = 'Looking for Roommate';
-    } else if (post.tags.contains('housing') || title.toLowerCase().contains('housing')) {
+    } else if (post.tags.contains('housing') ||
+        title.toLowerCase().contains('housing')) {
       category = 'Housing';
     }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.only(bottom: isSmallMobile ? 12 : 16),
+      padding: EdgeInsets.all(isSmallMobile ? 12 : 16),
       decoration: BoxDecoration(
         color: Colors.grey[800]!.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
@@ -1436,52 +1627,59 @@ class _CommunityBoardPageState extends State<CommunityBoardPage> {
           Row(
             children: [
               CircleAvatar(
-                radius: 14,
+                radius: isSmallMobile ? 12 : 14,
                 backgroundColor: AppTheme.goldColor,
                 child: Text(
-                  post.authorName.isNotEmpty ? post.authorName[0].toUpperCase() : 'G',
-                  style: const TextStyle(
+                  post.authorName.isNotEmpty
+                      ? post.authorName[0].toUpperCase()
+                      : 'G',
+                  style: TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.bold,
-                    fontSize: 12,
+                    fontSize: isSmallMobile ? 10 : 12,
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: isSmallMobile ? 6 : 8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       post.authorName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
-                        fontSize: 13,
+                        fontSize: isSmallMobile ? 12 : 13,
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       _formatTimestamp(post.timestamp),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.6),
-                        fontSize: 11,
+                        fontSize: isSmallMobile ? 10 : 11,
                       ),
                     ),
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppTheme.goldColor.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  category,
-                  style: TextStyle(
-                    color: AppTheme.goldColor,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
+              Flexible(
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: isSmallMobile ? 4 : 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppTheme.goldColor.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    category,
+                    style: TextStyle(
+                      color: AppTheme.goldColor,
+                      fontSize: isSmallMobile ? 9 : 10,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
@@ -1492,51 +1690,64 @@ class _CommunityBoardPageState extends State<CommunityBoardPage> {
           // Post title
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 15,
+              fontSize: isSmallMobile ? 14 : 15,
               fontWeight: FontWeight.w600,
             ),
+            maxLines: isSmallMobile ? 2 : 3,
+            overflow: TextOverflow.ellipsis,
           ),
 
           // Post description
           if (description.isNotEmpty) ...[
-            const SizedBox(height: 6),
+            SizedBox(height: isSmallMobile ? 4 : 6),
             Text(
               description,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.8),
-                fontSize: 13,
+                fontSize: isSmallMobile ? 12 : 13,
                 height: 1.3,
               ),
-              maxLines: 2,
+              maxLines: isSmallMobile ? 1 : 2,
               overflow: TextOverflow.ellipsis,
             ),
           ],
 
-          const SizedBox(height: 12),
+          SizedBox(height: isSmallMobile ? 10 : 12),
 
           // Actions
           Row(
             children: [
-              Text(
-                '${post.comments} comments',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
-                  fontSize: 11,
+              Expanded(
+                child: Text(
+                  '${post.comments} comments',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.6),
+                    fontSize: isSmallMobile ? 10 : 11,
+                  ),
                 ),
               ),
-              const Spacer(),
               TextButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CommunityPostDetailPage(post: post),
+                    ),
+                  );
+                },
                 style: TextButton.styleFrom(
                   foregroundColor: AppTheme.goldColor,
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: EdgeInsets.symmetric(
+                      horizontal: isSmallMobile ? 6 : 8, vertical: 4),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: const Text(
-                  'active',
+                child: Text(
+                  isSmallMobile ? 'View' : 'View Details',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: isSmallMobile ? 10 : 11,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -1545,7 +1756,8 @@ class _CommunityBoardPageState extends State<CommunityBoardPage> {
           ),
         ],
       ),
-    ).animate(delay: Duration(milliseconds: index * 100))
+    )
+        .animate(delay: Duration(milliseconds: index * 100))
         .fadeIn(duration: 600.ms)
         .slideX(begin: 0.2);
   }

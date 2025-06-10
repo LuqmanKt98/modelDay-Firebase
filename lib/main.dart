@@ -4,6 +4,14 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:new_flutter/pages/landing_page.dart';
 import 'package:new_flutter/services/auth_service.dart';
+import 'package:new_flutter/providers/industry_contacts_provider.dart';
+import 'package:new_flutter/providers/agencies_provider.dart';
+import 'package:new_flutter/providers/agents_provider.dart';
+import 'package:new_flutter/providers/events_provider.dart';
+import 'package:new_flutter/providers/jobs_provider.dart';
+import 'package:new_flutter/providers/castings_provider.dart';
+import 'package:new_flutter/providers/tests_provider.dart';
+import 'package:new_flutter/providers/polaroids_provider.dart';
 import 'package:new_flutter/theme/app_theme.dart';
 import 'package:new_flutter/utils/simple_route_manager.dart';
 
@@ -30,8 +38,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     debugPrint('🏗️ MyApp.build() called');
-    return ChangeNotifierProvider(
-      create: (context) => AuthService.instance,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => AuthService.instance),
+        ChangeNotifierProvider(create: (context) => IndustryContactsProvider()),
+        ChangeNotifierProvider(create: (context) => AgenciesProvider()),
+        ChangeNotifierProvider(create: (context) => AgentsProvider()),
+        ChangeNotifierProvider(create: (context) => EventsProvider()),
+        ChangeNotifierProvider(create: (context) => JobsProvider()),
+        ChangeNotifierProvider(create: (context) => CastingsProvider()),
+        ChangeNotifierProvider(create: (context) => TestsProvider()),
+        ChangeNotifierProvider(create: (context) => PolaroidsProvider()),
+      ],
       child: _buildMaterialApp(context),
     );
   }
@@ -52,6 +70,16 @@ class MyApp extends StatelessWidget {
             ),
             textTheme: ThemeData.dark().textTheme,
             scaffoldBackgroundColor: Colors.black,
+            iconButtonTheme: IconButtonThemeData(
+              style: IconButton.styleFrom(
+                foregroundColor: Colors.white,
+                iconSize: 24,
+              ),
+            ),
+            iconTheme: const IconThemeData(
+              color: Colors.white,
+              size: 24,
+            ),
           ),
           initialRoute: '/',
           onGenerateRoute: (settings) {
@@ -63,6 +91,7 @@ class MyApp extends StatelessWidget {
               routeName,
               isAuthenticated: authService.isAuthenticated,
               isInitialized: authService.isInitialized,
+              arguments: settings.arguments,
             );
 
             return MaterialPageRoute(
@@ -80,6 +109,4 @@ class MyApp extends StatelessWidget {
       },
     );
   }
-
-
 }

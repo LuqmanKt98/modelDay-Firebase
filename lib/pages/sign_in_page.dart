@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:new_flutter/services/auth_service.dart';
 import 'package:new_flutter/services/logger_service.dart';
 import 'package:new_flutter/theme/app_theme.dart';
-import 'package:new_flutter/widgets/enhanced_icon.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -52,7 +51,6 @@ class _SignInPageState extends State<SignInPage> {
           );
       debugPrint('✅ SignInPage - Sign in successful, navigating to welcome');
 
-      // Navigate to welcome page after successful authentication
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/welcome');
       }
@@ -81,9 +79,9 @@ class _SignInPageState extends State<SignInPage> {
     try {
       debugPrint('🔄 SignInPage - Attempting Google sign in...');
       await context.read<AuthService>().signInWithGoogle();
-      debugPrint('✅ SignInPage - Google sign in successful, navigating to welcome');
+      debugPrint(
+          '✅ SignInPage - Google sign in successful, navigating to welcome');
 
-      // Navigate to welcome page after successful authentication
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/welcome');
       }
@@ -102,16 +100,87 @@ class _SignInPageState extends State<SignInPage> {
     }
   }
 
+  Widget _buildPasswordField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Password',
+          style: TextStyle(color: Colors.white, fontSize: 16),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceColor,
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            border: Border.all(color: AppTheme.borderColor),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(
+                    hintText: '********',
+                    hintStyle: TextStyle(color: Colors.grey),
+                    border: InputBorder.none,
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  ),
+                  obscureText: _obscurePassword,
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (_) async => await _handleSignIn(),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your password';
+                    }
+                    return null;
+                  },
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+              Container(
+                width: 50,
+                height: 50,
+                margin: const EdgeInsets.all(4),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                      debugPrint(
+                          '👁️ Password visibility toggled: ${!_obscurePassword}');
+                    },
+                    child: Center(
+                      child: Text(
+                        _obscurePassword ? '👁️' : '🙈',
+                        style: const TextStyle(
+                          fontSize: 24,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     debugPrint('🏗️ SignInPage.build() called');
-    // Use local loading state instead of watching AuthService to prevent rebuilds
 
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            // Back Button - Fixed at top
+            // Back Button
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -159,7 +228,6 @@ class _SignInPageState extends State<SignInPage> {
                             height: 60,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
-                              // Fallback to text logo if asset fails to load
                               return Container(
                                 width: 60,
                                 height: 60,
@@ -264,41 +332,7 @@ class _SignInPageState extends State<SignInPage> {
                                     },
                                   ),
                                   const SizedBox(height: 16),
-                                  TextFormField(
-                                    controller: _passwordController,
-                                    decoration:
-                                        AppTheme.textFieldDecoration.copyWith(
-                                      labelText: 'Password',
-                                      hintText: '********',
-                                      suffixIcon: SizedBox(
-                                        width: 48,
-                                        height: 48,
-                                        child: EnhancedIconButton(
-                                          icon: _obscurePassword
-                                              ? Icons.visibility
-                                              : Icons.visibility_off,
-                                          onPressed: () {
-                                            setState(() {
-                                              _obscurePassword = !_obscurePassword;
-                                            });
-                                          },
-                                          color: AppTheme.goldColor.withValues(alpha: 0.7),
-                                          size: 20,
-                                          splashRadius: 20,
-                                        ),
-                                      ),
-                                    ),
-                                    obscureText: _obscurePassword,
-                                    textInputAction: TextInputAction.done,
-                                    onFieldSubmitted: (_) async =>
-                                        await _handleSignIn(),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Please enter your password';
-                                      }
-                                      return null;
-                                    },
-                                  ),
+                                  _buildPasswordField(),
                                   const SizedBox(height: 8),
                                   Align(
                                     alignment: Alignment.centerRight,
@@ -316,7 +350,8 @@ class _SignInPageState extends State<SignInPage> {
                                   ),
                                   const SizedBox(height: 16),
                                   ElevatedButton.icon(
-                                    onPressed: _isLoading ? null : _handleSignIn,
+                                    onPressed:
+                                        _isLoading ? null : _handleSignIn,
                                     icon: _isLoading
                                         ? const SizedBox(
                                             width: 20,
@@ -338,8 +373,7 @@ class _SignInPageState extends State<SignInPage> {
                                           child: Divider(color: Colors.grey)),
                                       Padding(
                                         padding: EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                        ),
+                                            horizontal: 16),
                                         child: Text(
                                           'OR',
                                           style: TextStyle(color: Colors.grey),
@@ -367,20 +401,25 @@ class _SignInPageState extends State<SignInPage> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Text(
-                                  'Don\'t have an account? ',
-                                  style: TextStyle(color: Colors.grey),
+                                const Flexible(
+                                  child: Text(
+                                    'Don\'t have an account? ',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
                                 ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.pushReplacementNamed(
-                                      context,
-                                      '/signup',
-                                    );
-                                  },
-                                  child: const Text(
-                                    'Sign up',
-                                    style: TextStyle(color: AppTheme.goldColor),
+                                Flexible(
+                                  child: TextButton(
+                                    onPressed: () {
+                                      Navigator.pushReplacementNamed(
+                                        context,
+                                        '/signup',
+                                      );
+                                    },
+                                    child: const Text(
+                                      'Sign up',
+                                      style:
+                                          TextStyle(color: AppTheme.goldColor),
+                                    ),
                                   ),
                                 ),
                               ],

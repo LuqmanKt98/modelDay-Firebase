@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:new_flutter/widgets/app_layout.dart';
 import 'package:new_flutter/widgets/ui/input.dart' as ui;
 import 'package:new_flutter/widgets/ui/button.dart';
+import 'package:new_flutter/widgets/ui/agent_dropdown.dart';
 import 'package:new_flutter/theme/app_theme.dart';
 import 'package:new_flutter/models/shooting.dart';
 import 'package:new_flutter/services/shootings_service.dart';
@@ -27,6 +28,7 @@ class _NewShootingPageState extends State<NewShootingPage> {
   DateTime _selectedDate = DateTime.now();
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
+  String? _selectedAgentId;
   bool _isLoading = false;
   bool _isEditing = false;
   String? _editingId;
@@ -100,6 +102,7 @@ class _NewShootingPageState extends State<NewShootingPage> {
       _rateController.text = data['rate'] ?? '';
       _selectedCurrency = data['currency'] ?? 'USD';
       _notesController.text = data['notes'] ?? '';
+      _selectedAgentId = data['bookingAgent'];
       if (data['jobType'] != null && data['jobType'].isNotEmpty) {
         if (_jobTypes.contains(data['jobType'])) {
           _selectedJobType = data['jobType'];
@@ -127,6 +130,7 @@ class _NewShootingPageState extends State<NewShootingPage> {
           _notesController.text = shooting.notes ?? '';
           _selectedStatus = shooting.status ?? 'pending';
           _selectedCurrency = shooting.currency ?? 'USD';
+          _selectedAgentId = shooting.bookingAgent;
 
           // Parse time strings
           if (shooting.time != null && shooting.time!.isNotEmpty) {
@@ -245,6 +249,7 @@ class _NewShootingPageState extends State<NewShootingPage> {
         time: _formatTime(_startTime),
         endTime: _formatTime(_endTime),
         location: _locationController.text,
+        bookingAgent: _selectedAgentId,
         rate: double.tryParse(_rateController.text),
         currency: _selectedCurrency,
         notes: _notesController.text,
@@ -318,6 +323,17 @@ class _NewShootingPageState extends State<NewShootingPage> {
                   ui.Input(
                     label: 'Location',
                     controller: _locationController,
+                  ),
+                  const SizedBox(height: 16),
+                  AgentDropdown(
+                    selectedAgentId: _selectedAgentId,
+                    labelText: 'Booking Agent',
+                    hintText: 'Select an agent',
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedAgentId = value;
+                      });
+                    },
                   ),
                 ],
               ),

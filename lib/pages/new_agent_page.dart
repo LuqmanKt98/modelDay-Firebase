@@ -120,7 +120,7 @@ class _NewAgentPageState extends State<NewAgentPage> {
       }
 
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {

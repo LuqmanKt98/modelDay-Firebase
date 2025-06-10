@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:new_flutter/widgets/app_layout.dart';
 import 'package:new_flutter/widgets/ui/input.dart' as ui;
 import 'package:new_flutter/widgets/ui/button.dart';
 import 'package:new_flutter/models/industry_contact.dart';
-import 'package:new_flutter/services/industry_contacts_service.dart';
+import 'package:new_flutter/providers/industry_contacts_provider.dart';
 
 class NewIndustryContactPage extends StatefulWidget {
   const NewIndustryContactPage({super.key});
@@ -52,8 +53,6 @@ class _NewIndustryContactPageState extends State<NewIndustryContactPage> {
     'Social Media Manager'
   ];
 
-  final IndustryContactsService _contactsService = IndustryContactsService();
-
   @override
   void initState() {
     super.initState();
@@ -73,7 +72,11 @@ class _NewIndustryContactPageState extends State<NewIndustryContactPage> {
     });
 
     try {
-      final contact = await _contactsService.getIndustryContactById(id);
+      final provider = context.read<IndustryContactsProvider>();
+      // First try to get from local list, then from service
+      IndustryContact? contact = provider.getContactById(id) ??
+          await provider.getContactByIdFromService(id);
+
       if (contact != null) {
         setState(() {
           _nameController.text = contact.name;
@@ -95,6 +98,15 @@ class _NewIndustryContactPageState extends State<NewIndustryContactPage> {
             _customJobTitleController.text = contact.jobTitle!;
           }
         });
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Contact not found'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -154,14 +166,30 @@ class _NewIndustryContactPageState extends State<NewIndustryContactPage> {
         notes: _notesController.text.isEmpty ? null : _notesController.text,
       );
 
+      final provider = context.read<IndustryContactsProvider>();
+      bool success = false;
+
       if (_isEditing && _editingId != null) {
-        await _contactsService.updateIndustryContact(_editingId!, contact.toJson());
+        success = await provider.updateContact(_editingId!, contact.toJson());
       } else {
-        await _contactsService.createIndustryContact(contact.toJson());
+        success = await provider.createContact(contact.toJson());
       }
 
       if (mounted) {
-        Navigator.pop(context);
+        if (success) {
+          // Return true to indicate successful save
+          Navigator.pop(context, true);
+        } else {
+          // Show error if save failed
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(_isEditing
+                  ? 'Failed to update contact'
+                  : 'Failed to create contact'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -400,7 +428,8 @@ class _NewIndustryContactPageState extends State<NewIndustryContactPage> {
               border: Border.all(color: const Color(0xFF2E2E2E)),
             ),
             child: DropdownButtonFormField<String>(
-              value: _selectedJobTitle.isNotEmpty && _jobTitles.contains(_selectedJobTitle)
+              value: _selectedJobTitle.isNotEmpty &&
+                      _jobTitles.contains(_selectedJobTitle)
                   ? _selectedJobTitle
                   : null,
               decoration: const InputDecoration(

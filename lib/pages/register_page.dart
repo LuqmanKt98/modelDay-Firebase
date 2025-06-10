@@ -162,6 +162,8 @@ class _RegisterPageState extends State<RegisterPage> {
                     label: 'Password',
                     controller: _passwordController,
                     obscureText: true,
+                    keyboardType: TextInputType.visiblePassword,
+                    showPasswordToggle: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter a password';
@@ -179,6 +181,8 @@ class _RegisterPageState extends State<RegisterPage> {
                     label: 'Confirm Password',
                     controller: _confirmPasswordController,
                     obscureText: true,
+                    keyboardType: TextInputType.visiblePassword,
+                    showPasswordToggle: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please confirm your password';

@@ -502,8 +502,15 @@ class _JobsPageState extends State<JobsPage> {
                           Expanded(
                             child: Button(
                               variant: ButtonVariant.outline,
-                              onPressed: () {
-                                Navigator.pushNamed(context, '/new-job');
+                              onPressed: () async {
+                                final result = await Navigator.pushNamed(
+                                  context,
+                                  '/new-job',
+                                  arguments: job,
+                                );
+                                if (result == true) {
+                                  _loadJobs();
+                                }
                               },
                               text: 'Edit',
                             ),
@@ -553,8 +560,15 @@ class _JobsPageState extends State<JobsPage> {
                       children: [
                         Button(
                           variant: ButtonVariant.outline,
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/new-job');
+                          onPressed: () async {
+                            final result = await Navigator.pushNamed(
+                              context,
+                              '/new-job',
+                              arguments: job,
+                            );
+                            if (result == true) {
+                              _loadJobs();
+                            }
                           },
                           text: 'Edit',
                         ),
@@ -694,8 +708,15 @@ class _JobsPageState extends State<JobsPage> {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.edit),
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/new-job');
+                          onPressed: () async {
+                            final result = await Navigator.pushNamed(
+                              context,
+                              '/new-job',
+                              arguments: job,
+                            );
+                            if (result == true) {
+                              _loadJobs();
+                            }
                           },
                         ),
                         IconButton(
@@ -739,8 +760,7 @@ class _JobsPageState extends State<JobsPage> {
                         prefixIcon: const Icon(Icons.search),
                         hintText: 'Search jobs...',
                         controller: _searchController,
-                        onChanged: (value) =>
-                            setState(() {}),
+                        onChanged: (value) => setState(() {}),
                       ),
                       const SizedBox(height: 12),
                       Row(
@@ -787,8 +807,7 @@ class _JobsPageState extends State<JobsPage> {
                         prefixIcon: const Icon(Icons.search),
                         hintText: 'Search jobs...',
                         controller: _searchController,
-                        onChanged: (value) =>
-                            setState(() {}),
+                        onChanged: (value) => setState(() {}),
                       ),
                     ),
                     const SizedBox(width: 16),

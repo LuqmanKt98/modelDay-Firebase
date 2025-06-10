@@ -46,10 +46,12 @@ class _LandingPageState extends State<LandingPage> {
       if (!mounted || _hasRedirected) return;
 
       final authService = context.read<AuthService>();
-      debugPrint('🔍 LandingPage - Auth user: ${authService.currentUser?.email ?? 'null'}');
+      debugPrint(
+          '🔍 LandingPage - Auth user: ${authService.currentUser?.email ?? 'null'}');
 
       if (authService.currentUser != null) {
-        debugPrint('🔄 LandingPage - User logged in, redirecting to welcome...');
+        debugPrint(
+            '🔄 LandingPage - User logged in, redirecting to welcome...');
         _hasRedirected = true;
         Navigator.pushReplacementNamed(context, '/welcome');
       }
@@ -104,7 +106,7 @@ class _LandingPageState extends State<LandingPage> {
             // Fixed navbar - no overlap
             Container(
               width: double.infinity,
-              height: 70,
+              height: MediaQuery.of(context).size.width <= 360 ? 50 : 70,
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.95),
                 border: Border(
@@ -115,8 +117,12 @@ class _LandingPageState extends State<LandingPage> {
                 ),
               ),
               padding: EdgeInsets.symmetric(
-                horizontal: MediaQuery.of(context).size.width < 768 ? 12 : 24,
-                vertical: 16,
+                horizontal: MediaQuery.of(context).size.width <= 360
+                    ? 8
+                    : MediaQuery.of(context).size.width < 768
+                        ? 12
+                        : 24,
+                vertical: MediaQuery.of(context).size.width <= 360 ? 8 : 16,
               ),
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -136,11 +142,22 @@ class _LandingPageState extends State<LandingPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Container(
-                              height: isMobile ? 28 : 32,
-                              width: isMobile ? 28 : 32,
+                              height: isVerySmall
+                                  ? 20
+                                  : isMobile
+                                      ? 28
+                                      : 32,
+                              width: isVerySmall
+                                  ? 20
+                                  : isMobile
+                                      ? 28
+                                      : 32,
                               decoration: BoxDecoration(
-                                borderRadius:
-                                    BorderRadius.circular(isMobile ? 14 : 16),
+                                borderRadius: BorderRadius.circular(isVerySmall
+                                    ? 10
+                                    : isMobile
+                                        ? 14
+                                        : 16),
                                 border: Border.all(
                                   color:
                                       AppTheme.goldColor.withValues(alpha: 0.3),
@@ -209,86 +226,41 @@ class _LandingPageState extends State<LandingPage> {
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             if (isVerySmall) ...[
-                              // Very small screens: Stack buttons vertically or use minimal design
-                              Flexible(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        onTap: () {
-                                          LoggerService.info('🔥 Sign Up button clicked!');
-                                          Navigator.pushNamed(
-                                              context, '/signup');
-                                        },
-                                        borderRadius: BorderRadius.circular(6),
-                                        child: Container(
-                                          constraints: const BoxConstraints(
-                                            minWidth: 50,
-                                            minHeight: 32,
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: AppTheme.goldColor,
-                                            borderRadius:
-                                                BorderRadius.circular(6),
-                                          ),
-                                          child: const Center(
-                                            child: Text(
-                                              'Sign Up',
-                                              style: TextStyle(
-                                                color: Colors.black,
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ),
+                              // Very small screens: Single compact button
+                              Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () {
+                                    LoggerService.info(
+                                        '🔥 Sign Up button clicked!');
+                                    Navigator.pushNamed(context, '/signup');
+                                  },
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: Container(
+                                    constraints: const BoxConstraints(
+                                      minWidth: 40,
+                                      minHeight: 24,
+                                      maxHeight: 28,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.goldColor,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: const Center(
+                                      child: Text(
+                                        'Join',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 9,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(height: 2),
-                                    Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        onTap: () {
-                                          LoggerService.info('🔥 Sign In button clicked!');
-                                          Navigator.pushNamed(
-                                              context, '/signin');
-                                        },
-                                        borderRadius: BorderRadius.circular(6),
-                                        child: Container(
-                                          constraints: const BoxConstraints(
-                                            minWidth: 50,
-                                            minHeight: 32,
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            border: Border.all(
-                                                color: AppTheme.goldColor),
-                                            borderRadius:
-                                                BorderRadius.circular(6),
-                                          ),
-                                          child: const Center(
-                                            child: Text(
-                                              'Sign In',
-                                              style: TextStyle(
-                                                color: AppTheme.goldColor,
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
+                                  ),
                                 ),
                               ),
                             ] else ...[
@@ -298,7 +270,8 @@ class _LandingPageState extends State<LandingPage> {
                                 color: Colors.transparent,
                                 child: InkWell(
                                   onTap: () {
-                                    LoggerService.info('🔥 Sign Up button clicked!');
+                                    LoggerService.info(
+                                        '🔥 Sign Up button clicked!');
                                     Navigator.pushNamed(context, '/signup');
                                   },
                                   borderRadius: BorderRadius.circular(8),
@@ -344,7 +317,8 @@ class _LandingPageState extends State<LandingPage> {
                                 color: Colors.transparent,
                                 child: InkWell(
                                   onTap: () {
-                                    LoggerService.info('🔥 Sign In button clicked!');
+                                    LoggerService.info(
+                                        '🔥 Sign In button clicked!');
                                     Navigator.pushNamed(context, '/signin');
                                   },
                                   borderRadius: BorderRadius.circular(8),

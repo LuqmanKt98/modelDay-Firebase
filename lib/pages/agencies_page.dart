@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:new_flutter/widgets/app_layout.dart';
 import 'package:new_flutter/widgets/ui/button.dart' as ui;
 import 'package:new_flutter/widgets/ui/input.dart' as ui;
@@ -6,7 +7,7 @@ import 'package:new_flutter/widgets/ui/card.dart' as ui;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/agency.dart';
-import '../services/agencies_service.dart';
+import '../providers/agencies_provider.dart';
 
 class AgenciesPage extends StatefulWidget {
   const AgenciesPage({super.key});
@@ -16,60 +17,20 @@ class AgenciesPage extends StatefulWidget {
 }
 
 class _AgenciesPageState extends State<AgenciesPage> {
-  bool _isLoading = true;
-  String? _error;
-  List<Agency> _agencies = [];
-  String _searchTerm = '';
   final _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadAgencies();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AgenciesProvider>().loadAgencies();
+    });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadAgencies() async {
-    try {
-      if (mounted) {
-        setState(() {
-          _isLoading = true;
-          _error = null;
-        });
-      }
-
-      final agencies = await AgenciesService.list();
-      agencies.sort((a, b) => a.name.compareTo(b.name));
-
-      if (mounted) {
-        setState(() {
-          _agencies = agencies;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = 'Failed to load agencies: $e';
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  List<Agency> get _filteredAgencies {
-    if (_searchTerm.isEmpty) return _agencies;
-    final term = _searchTerm.toLowerCase();
-    return _agencies.where((agency) {
-      return agency.name.toLowerCase().contains(term) ||
-          agency.city?.toLowerCase().contains(term) == true ||
-          agency.country?.toLowerCase().contains(term) == true;
-    }).toList();
   }
 
   Future<void> _launchUrl(String url) async {
@@ -117,26 +78,18 @@ class _AgenciesPageState extends State<AgenciesPage> {
   }
 
   Future<void> _deleteAgency(Agency agency) async {
-    try {
-      await AgenciesService.delete(agency.id!);
-      _loadAgencies(); // Refresh the list
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Agency deleted successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error deleting agency: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    final provider = context.read<AgenciesProvider>();
+    final success = await provider.deleteAgency(agency.id!);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success
+              ? 'Agency deleted successfully'
+              : provider.error ?? 'Error deleting agency'),
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
     }
   }
 
@@ -182,12 +135,15 @@ class _AgenciesPageState extends State<AgenciesPage> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.edit_outlined),
-                      onPressed: () {
-                        Navigator.pushNamed(
+                      onPressed: () async {
+                        final result = await Navigator.pushNamed(
                           context,
                           '/new-agency',
                           arguments: agency.id,
                         );
+                        if (result == true && mounted) {
+                          context.read<AgenciesProvider>().loadAgencies();
+                        }
                       },
                       tooltip: 'Edit',
                     ),
@@ -377,180 +333,188 @@ class _AgenciesPageState extends State<AgenciesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredAgencies = _filteredAgencies;
-
-    return AppLayout(
-      currentPage: '/agencies',
-      title: 'Agencies',
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Manage Your Agencies',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    ui.Button(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/new-agency');
-                      },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.add, size: 20, color: Colors.grey[100]),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Add Agency',
-                            style: TextStyle(
-                              color: Colors.grey[100],
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
+    return Consumer<AgenciesProvider>(
+      builder: (context, provider, child) {
+        return AppLayout(
+          currentPage: '/agencies',
+          title: 'Agencies',
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[900],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ui.Input(
-                    prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
-                    hintText: 'Search agencies...',
-                    controller: _searchController,
-                    onChanged: (value) => setState(() => _searchTerm = value),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: _loadAgencies,
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _error != null
-                      ? Center(
-                          child: Column(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Manage Your Agencies',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        ui.Button(
+                          onPressed: () async {
+                            final result = await Navigator.pushNamed(
+                                context, '/new-agency');
+                            if (result == true) {
+                              provider.loadAgencies();
+                            }
+                          },
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
-                                Icons.error_outline,
-                                size: 64,
-                                color: Colors.red[300],
-                              ),
-                              const SizedBox(height: 16),
+                              Icon(Icons.add,
+                                  size: 20, color: Colors.grey[100]),
+                              const SizedBox(width: 8),
                               Text(
-                                'Error',
+                                'Add Agency',
                                 style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.red[700],
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _error!,
-                                style: TextStyle(
-                                  color: Colors.grey[400],
-                                  fontSize: 16,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 24),
-                              ui.Button(
-                                onPressed: _loadAgencies,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.refresh,
-                                      size: 20,
-                                      color: Colors.grey[100],
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Try Again',
-                                      style: TextStyle(
-                                        color: Colors.grey[100],
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
+                                  color: Colors.grey[100],
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
                           ),
-                        )
-                      : filteredAgencies.isEmpty
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[900],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ui.Input(
+                        prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
+                        hintText: 'Search agencies...',
+                        controller: _searchController,
+                        onChanged: (value) => provider.setSearchTerm(value),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: provider.refresh,
+                  child: provider.isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : provider.error != null
                           ? Center(
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
-                                    Icons.business_outlined,
+                                    Icons.error_outline,
                                     size: 64,
-                                    color: Colors.grey[400],
+                                    color: Colors.red[300],
                                   ),
                                   const SizedBox(height: 16),
                                   Text(
-                                    'No agencies found',
+                                    'Error',
                                     style: TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.grey[800],
+                                      color: Colors.red[700],
                                     ),
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    'Try adjusting your search or add a new agency',
+                                    provider.error!,
                                     style: TextStyle(
                                       color: Colors.grey[400],
                                       fontSize: 16,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 24),
+                                  ui.Button(
+                                    onPressed: provider.loadAgencies,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.refresh,
+                                          size: 20,
+                                          color: Colors.grey[100],
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Try Again',
+                                          style: TextStyle(
+                                            color: Colors.grey[100],
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
                             )
-                          : ListView.separated(
-                              padding: const EdgeInsets.all(24),
-                              itemCount: filteredAgencies.length,
-                              separatorBuilder: (context, index) =>
-                                  const SizedBox(height: 16),
-                              itemBuilder: (context, index) =>
-                                  _buildAgencyCard(filteredAgencies[index]),
-                            ),
-            ),
+                          : provider.filteredAgencies.isEmpty
+                              ? Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.business_outlined,
+                                        size: 64,
+                                        color: Colors.grey[400],
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'No agencies found',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.grey[800],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Try adjusting your search or add a new agency',
+                                        style: TextStyle(
+                                          color: Colors.grey[400],
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : ListView.separated(
+                                  padding: const EdgeInsets.all(24),
+                                  itemCount: provider.filteredAgencies.length,
+                                  separatorBuilder: (context, index) =>
+                                      const SizedBox(height: 16),
+                                  itemBuilder: (context, index) =>
+                                      _buildAgencyCard(
+                                          provider.filteredAgencies[index]),
+                                ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

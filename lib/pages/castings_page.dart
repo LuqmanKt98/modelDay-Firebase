@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../models/casting.dart';
+import '../providers/castings_provider.dart';
 import '../widgets/app_layout.dart';
 import '../widgets/ui/button.dart';
 import '../widgets/ui/input.dart' as ui;
@@ -13,15 +15,14 @@ class CastingsPage extends StatefulWidget {
 }
 
 class _CastingsPageState extends State<CastingsPage> {
-  List<Casting> castings = [];
-  bool isLoading = true;
-  String? error;
   final _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadCastings();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CastingsProvider>().loadCastings();
+    });
   }
 
   @override
@@ -30,47 +31,19 @@ class _CastingsPageState extends State<CastingsPage> {
     super.dispose();
   }
 
-  Future<void> _loadCastings() async {
-    try {
-      if (mounted) {
-        setState(() {
-          isLoading = true;
-          error = null;
-        });
-      }
-
-      final loadedCastings = await Casting.list();
-      if (mounted) {
-        setState(() {
-          castings = loadedCastings;
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          error = 'Failed to load castings: $e';
-          isLoading = false;
-        });
-      }
-    }
-  }
-
   Future<void> _deleteCasting(String id) async {
-    try {
-      await Casting.delete(id);
-      await _loadCastings();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Casting deleted successfully')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to delete casting: $e')));
-      }
+    final provider = context.read<CastingsProvider>();
+    final success = await provider.deleteCasting(id);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success
+              ? 'Casting deleted successfully'
+              : provider.error ?? 'Error deleting casting'),
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
     }
   }
 
@@ -95,7 +68,7 @@ class _CastingsPageState extends State<CastingsPage> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        casting.description,
+                        casting.description ?? 'No description',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Colors.grey[600],
                             ),
@@ -160,7 +133,7 @@ class _CastingsPageState extends State<CastingsPage> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    casting.location,
+                    casting.location ?? 'No location',
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
@@ -170,7 +143,7 @@ class _CastingsPageState extends State<CastingsPage> {
             Text('Requirements', style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 4),
             Text(
-              casting.requirements,
+              casting.requirements ?? 'No requirements specified',
               style: Theme.of(context).textTheme.bodyMedium,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
@@ -220,8 +193,8 @@ class _CastingsPageState extends State<CastingsPage> {
                       '/new-casting',
                       arguments: casting,
                     );
-                    if (result == true) {
-                      _loadCastings(); // Refresh the list
+                    if (result == true && mounted) {
+                      context.read<CastingsProvider>().loadCastings();
                     }
                   },
                   text: 'Edit',
@@ -242,43 +215,57 @@ class _CastingsPageState extends State<CastingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return AppLayout(
-      currentPage: '/castings',
-      title: 'Castings',
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.add),
-          onPressed: () => Navigator.pushNamed(context, '/new-casting'),
-        ),
-      ],
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ui.Input(
-              prefixIcon: const Icon(Icons.search),
-              hintText: 'Search castings...',
-              controller: _searchController,
-              onChanged: (value) => setState(() {}),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : error != null
-                      ? Center(child: Text(error!))
-                      : castings.isEmpty
-                          ? const Center(child: Text('No castings found'))
-                          : ListView.builder(
-                              itemCount: castings.length,
-                              itemBuilder: (context, index) =>
-                                  _buildCastingCard(castings[index]),
-                            ),
+    return Consumer<CastingsProvider>(
+      builder: (context, provider, child) {
+        return AppLayout(
+          currentPage: '/castings',
+          title: 'Castings',
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () async {
+                final result =
+                    await Navigator.pushNamed(context, '/new-casting');
+                if (result == true) {
+                  provider.loadCastings();
+                }
+              },
             ),
           ],
-        ),
-      ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ui.Input(
+                  prefixIcon: const Icon(Icons.search),
+                  hintText: 'Search castings...',
+                  controller: _searchController,
+                  onChanged: (value) => provider.setSearchTerm(value),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: provider.refresh,
+                    child: provider.isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : provider.error != null
+                            ? Center(child: Text(provider.error!))
+                            : provider.filteredCastings.isEmpty
+                                ? const Center(child: Text('No castings found'))
+                                : ListView.builder(
+                                    itemCount: provider.filteredCastings.length,
+                                    itemBuilder: (context, index) =>
+                                        _buildCastingCard(
+                                            provider.filteredCastings[index]),
+                                  ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

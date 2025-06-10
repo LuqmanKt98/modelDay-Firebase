@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 
-class Input extends StatelessWidget {
+class Input extends StatefulWidget {
   final String? label;
   final String? placeholder;
   final TextEditingController? controller;
@@ -20,6 +20,7 @@ class Input extends StatelessWidget {
   final bool enabled;
   final Widget? prefixIcon;
   final String? hintText;
+  final bool showPasswordToggle;
 
   const Input({
     super.key,
@@ -41,40 +42,83 @@ class Input extends StatelessWidget {
     this.enabled = true,
     this.prefixIcon,
     this.hintText,
+    this.showPasswordToggle = false,
   });
 
   @override
+  State<Input> createState() => _InputState();
+}
+
+class _InputState extends State<Input> {
+  late bool _obscureText;
+
+  @override
+  void initState() {
+    super.initState();
+    _obscureText = widget.obscureText;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    Widget? suffixIcon = widget.suffix;
+
+    // Add password toggle if enabled
+    if (widget.showPasswordToggle && widget.keyboardType == TextInputType.visiblePassword) {
+      suffixIcon = IconButton(
+        icon: Icon(
+          _obscureText ? Icons.visibility : Icons.visibility_off,
+          color: AppTheme.goldColor.withValues(alpha: 0.7),
+          size: 20,
+        ),
+        onPressed: () {
+          setState(() {
+            _obscureText = !_obscureText;
+          });
+        },
+        splashRadius: 20,
+        padding: EdgeInsets.zero,
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (label != null)
+        if (widget.label != null)
           Padding(
             padding: const EdgeInsets.only(bottom: AppTheme.spacingSm),
             child: Text(
-              label!,
+              widget.label!,
               style: AppTheme.labelLarge,
             ),
           ),
         TextFormField(
-          controller: controller,
-          onChanged: onChanged,
-          obscureText: obscureText,
-          keyboardType: keyboardType,
-          validator: validator,
-          readOnly: readOnly,
-          maxLines: maxLines,
-          textInputAction: textInputAction,
-          focusNode: focusNode,
-          onTap: onTap,
-          autofocus: autofocus,
-          enabled: enabled,
+          controller: widget.controller,
+          onChanged: widget.onChanged,
+          obscureText: _obscureText,
+          keyboardType: widget.keyboardType,
+          validator: widget.validator,
+          readOnly: widget.readOnly,
+          maxLines: widget.maxLines,
+          textInputAction: widget.textInputAction,
+          focusNode: widget.focusNode,
+          onTap: widget.onTap,
+          autofocus: widget.autofocus,
+          enabled: widget.enabled,
           decoration: AppTheme.textFieldDecoration.copyWith(
-            prefixIcon: prefixIcon,
-            hintText: hintText ?? placeholder,
+            prefixIcon: widget.prefixIcon,
+            suffixIcon: suffixIcon,
+            hintText: widget.hintText ?? widget.placeholder,
             hintStyle: AppTheme.bodyMedium.copyWith(color: AppTheme.textMuted),
+            // Override autofill styling
+            fillColor: AppTheme.surfaceColor,
+            filled: true,
           ),
-          style: AppTheme.bodyMedium,
+          style: AppTheme.bodyMedium.copyWith(
+            color: AppTheme.textPrimary, // Ensure text is white
+          ),
+          // Disable browser autofill styling
+          autocorrect: false,
+          enableSuggestions: false,
         ),
       ],
     );

@@ -18,16 +18,21 @@ class _SignUpPageState extends State<SignUpPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  bool _agreeToTerms = false;
   String _error = '';
-  int _passwordStrength = 0;
-  List<String> _passwordFeedback = [];
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _agreeToTerms = false;
+
+  @override
+  void initState() {
+    super.initState();
+    debugPrint('🔑 SignUpPage.initState() called');
+  }
 
   @override
   void dispose() {
+    debugPrint('🗑️ SignUpPage.dispose() called');
     _fullNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -35,54 +40,14 @@ class _SignUpPageState extends State<SignUpPage> {
     super.dispose();
   }
 
-  void _checkPasswordStrength(String password) {
-    int score = 0;
-    List<String> feedback = [];
-
-    if (password.length >= 8) {
-      score++;
-    } else {
-      feedback.add('Password should be at least 8 characters');
-    }
-
-    if (password.contains(RegExp(r'[A-Z]'))) {
-      score++;
-    } else {
-      feedback.add('Include at least one uppercase letter');
-    }
-
-    if (password.contains(RegExp(r'[a-z]'))) {
-      score++;
-    } else {
-      feedback.add('Include at least one lowercase letter');
-    }
-
-    if (password.contains(RegExp(r'[0-9]'))) {
-      score++;
-    } else {
-      feedback.add('Include at least one number');
-    }
-
-    if (password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
-      score++;
-    } else {
-      feedback.add('Include at least one special character');
-    }
-
-    setState(() {
-      _passwordStrength = score;
-      _passwordFeedback = feedback;
-    });
-  }
-
   Future<void> _handleSignUp() async {
+    debugPrint('🔑 SignUpPage._handleSignUp() called');
     if (!_formKey.currentState!.validate()) return;
+
     if (!_agreeToTerms) {
-      setState(() => _error = 'You must agree to the terms and conditions');
-      return;
-    }
-    if (_passwordStrength < 3) {
-      setState(() => _error = 'Please use a stronger password');
+      setState(() {
+        _error = 'Please agree to the Terms and Conditions';
+      });
       return;
     }
 
@@ -92,20 +57,34 @@ class _SignUpPageState extends State<SignUpPage> {
     });
 
     try {
+      debugPrint('🔄 SignUpPage - Attempting sign up...');
       await context.read<AuthService>().signUp(
             email: _emailController.text.trim(),
             password: _passwordController.text,
             fullName: _fullNameController.text.trim(),
           );
+      debugPrint('✅ SignUpPage - Sign up successful');
 
-      // Navigate to welcome page after successful authentication
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/welcome');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registration successful! Welcome to ModelDay!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Navigate to welcome page after successful signup
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/welcome',
+          (route) => false,
+        );
       }
     } catch (e) {
+      debugPrint('❌ SignUpPage - Sign up failed: $e');
       if (mounted) {
         setState(() {
-          _error = 'Could not create your account. Please try again.';
+          _error = 'Failed to create account. Please try again.';
           _isLoading = false;
         });
       }
@@ -117,19 +96,27 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   Future<void> _handleGoogleSignUp() async {
+    debugPrint('🔑 SignUpPage._handleGoogleSignUp() called');
     setState(() {
       _error = '';
       _isLoading = true;
     });
 
     try {
+      debugPrint('🔄 SignUpPage - Attempting Google sign up...');
       await context.read<AuthService>().signInWithGoogle();
+      debugPrint('✅ SignUpPage - Google sign up successful');
 
-      // Navigate to welcome page after successful authentication
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/welcome');
+        // Navigate to welcome page after successful Google signup
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/welcome',
+          (route) => false,
+        );
       }
     } catch (e) {
+      debugPrint('❌ SignUpPage - Google sign up failed: $e');
       if (mounted) {
         setState(() {
           _error = 'Failed to sign up with Google. Please try again.';
@@ -143,31 +130,161 @@ class _SignUpPageState extends State<SignUpPage> {
     }
   }
 
-  Color _getPasswordStrengthColor() {
-    switch (_passwordStrength) {
-      case 0:
-      case 1:
-        return Colors.red;
-      case 2:
-      case 3:
-        return Colors.yellow;
-      case 4:
-      case 5:
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
+  Widget _buildPasswordField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Password',
+          style: TextStyle(color: Colors.white, fontSize: 16),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceColor,
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            border: Border.all(color: AppTheme.borderColor),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _passwordController,
+                  decoration: const InputDecoration(
+                    hintText: '********',
+                    hintStyle: TextStyle(color: Colors.grey),
+                    border: InputBorder.none,
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  ),
+                  obscureText: _obscurePassword,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a password';
+                    }
+                    if (value.length < 6) {
+                      return 'Password must be at least 6 characters';
+                    }
+                    return null;
+                  },
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+              Container(
+                width: 50,
+                height: 50,
+                margin: const EdgeInsets.all(4),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                      debugPrint(
+                          '👁️ Password visibility toggled: ${!_obscurePassword}');
+                    },
+                    child: Center(
+                      child: Text(
+                        _obscurePassword ? '👁️' : '🙈',
+                        style: const TextStyle(
+                          fontSize: 24,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildConfirmPasswordField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Confirm Password',
+          style: TextStyle(color: Colors.white, fontSize: 16),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: AppTheme.surfaceColor,
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            border: Border.all(color: AppTheme.borderColor),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _confirmPasswordController,
+                  decoration: const InputDecoration(
+                    hintText: '********',
+                    hintStyle: TextStyle(color: Colors.grey),
+                    border: InputBorder.none,
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  ),
+                  obscureText: _obscureConfirmPassword,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please confirm your password';
+                    }
+                    if (value != _passwordController.text) {
+                      return 'Passwords do not match';
+                    }
+                    return null;
+                  },
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+              Container(
+                width: 50,
+                height: 50,
+                margin: const EdgeInsets.all(4),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () {
+                      setState(() {
+                        _obscureConfirmPassword = !_obscureConfirmPassword;
+                      });
+                      debugPrint(
+                          '👁️ Confirm password visibility toggled: ${!_obscureConfirmPassword}');
+                    },
+                    child: Center(
+                      child: Text(
+                        _obscureConfirmPassword ? '👁️' : '🙈',
+                        style: const TextStyle(
+                          fontSize: 24,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Use local loading state instead of watching AuthService to prevent rebuilds
+    debugPrint('🏗️ SignUpPage.build() called');
 
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            // Back Button - Fixed at top
+            // Back Button
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -215,7 +332,6 @@ class _SignUpPageState extends State<SignUpPage> {
                             height: 60,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
-                              // Fallback to text logo if asset fails to load
                               return Container(
                                 width: 60,
                                 height: 60,
@@ -267,13 +383,17 @@ class _SignUpPageState extends State<SignUpPage> {
 
                             // Google Sign Up Button
                             OutlinedButton.icon(
-                              onPressed: _isLoading ? null : _handleGoogleSignUp,
-                              icon: const Icon(Icons.g_mobiledata, size: 20),
+                              onPressed:
+                                  _isLoading ? null : _handleGoogleSignUp,
+                              icon: const Icon(
+                                Icons.g_mobiledata,
+                                size: 20,
+                              ),
                               label: const Text('Sign up with Google'),
                               style: AppTheme.outlineButtonStyle,
                             ),
-
                             const SizedBox(height: 24),
+
                             const Row(
                               children: [
                                 Expanded(child: Divider(color: Colors.grey)),
@@ -332,10 +452,12 @@ class _SignUpPageState extends State<SignUpPage> {
                                     decoration:
                                         AppTheme.textFieldDecoration.copyWith(
                                       labelText: 'Full Name',
-                                      hintText: 'John Doe',
+                                      hintText: 'Enter your full name',
                                     ),
+                                    textInputAction: TextInputAction.next,
                                     validator: (value) {
-                                      if (value == null || value.isEmpty) {
+                                      if (value == null ||
+                                          value.trim().isEmpty) {
                                         return 'Please enter your full name';
                                       }
                                       return null;
@@ -350,140 +472,24 @@ class _SignUpPageState extends State<SignUpPage> {
                                       hintText: 'name@example.com',
                                     ),
                                     keyboardType: TextInputType.emailAddress,
+                                    textInputAction: TextInputAction.next,
                                     validator: (value) {
-                                      if (value == null || value.isEmpty) {
+                                      if (value == null ||
+                                          value.trim().isEmpty) {
                                         return 'Please enter your email';
                                       }
+                                      if (!RegExp(
+                                              r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                                          .hasMatch(value)) {
+                                        return 'Please enter a valid email';
+                                      }
                                       return null;
                                     },
                                   ),
                                   const SizedBox(height: 16),
-                                  TextFormField(
-                                    controller: _passwordController,
-                                    decoration:
-                                        AppTheme.textFieldDecoration.copyWith(
-                                      labelText: 'Password',
-                                      hintText: '********',
-                                      suffixIcon: Container(
-                                        width: 48,
-                                        height: 48,
-                                        alignment: Alignment.center,
-                                        child: IconButton(
-                                          icon: Container(
-                                            width: 24,
-                                            height: 24,
-                                            alignment: Alignment.center,
-                                            child: Icon(
-                                              _obscurePassword
-                                                  ? Icons.visibility
-                                                  : Icons.visibility_off,
-                                              color: AppTheme.goldColor.withValues(alpha: 0.7),
-                                              size: 20,
-                                            ),
-                                          ),
-                                          onPressed: () {
-                                            setState(() {
-                                              _obscurePassword = !_obscurePassword;
-                                            });
-                                          },
-                                          splashRadius: 20,
-                                          padding: EdgeInsets.zero,
-                                        ),
-                                      ),
-                                    ),
-                                    obscureText: _obscurePassword,
-                                    onChanged: _checkPasswordStrength,
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Please enter a password';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  const SizedBox(height: 8),
-                                  // Password Strength Indicator
-                                  if (_passwordController.text.isNotEmpty)
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        LinearProgressIndicator(
-                                          value: _passwordStrength / 5,
-                                          backgroundColor: Colors.grey[800],
-                                          color: _getPasswordStrengthColor(),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        ..._passwordFeedback.map(
-                                          (feedback) => Padding(
-                                            padding: const EdgeInsets.only(
-                                              bottom: 4,
-                                            ),
-                                            child: Row(
-                                              children: [
-                                                Icon(
-                                                  Icons.info_outline,
-                                                  size: 16,
-                                                  color: Colors.grey[400],
-                                                ),
-                                                const SizedBox(width: 8),
-                                                Text(
-                                                  feedback,
-                                                  style: TextStyle(
-                                                    color: Colors.grey[400],
-                                                    fontSize: 12,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                  _buildPasswordField(),
                                   const SizedBox(height: 16),
-                                  TextFormField(
-                                    controller: _confirmPasswordController,
-                                    decoration:
-                                        AppTheme.textFieldDecoration.copyWith(
-                                      labelText: 'Confirm Password',
-                                      hintText: '********',
-                                      suffixIcon: Container(
-                                        width: 48,
-                                        height: 48,
-                                        alignment: Alignment.center,
-                                        child: IconButton(
-                                          icon: Container(
-                                            width: 24,
-                                            height: 24,
-                                            alignment: Alignment.center,
-                                            child: Icon(
-                                              _obscureConfirmPassword
-                                                  ? Icons.visibility
-                                                  : Icons.visibility_off,
-                                              color: AppTheme.goldColor.withValues(alpha: 0.7),
-                                              size: 20,
-                                            ),
-                                          ),
-                                          onPressed: () {
-                                            setState(() {
-                                              _obscureConfirmPassword = !_obscureConfirmPassword;
-                                            });
-                                          },
-                                          splashRadius: 20,
-                                          padding: EdgeInsets.zero,
-                                        ),
-                                      ),
-                                    ),
-                                    obscureText: _obscureConfirmPassword,
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Please confirm your password';
-                                      }
-                                      if (value != _passwordController.text) {
-                                        return 'Passwords do not match';
-                                      }
-                                      return null;
-                                    },
-                                  ),
+                                  _buildConfirmPasswordField(),
                                   const SizedBox(height: 16),
                                   Row(
                                     children: [
@@ -499,9 +505,8 @@ class _SignUpPageState extends State<SignUpPage> {
                                         child: Text.rich(
                                           TextSpan(
                                             text: 'I agree to the ',
-                                            style: TextStyle(
-                                              color: Colors.grey,
-                                            ),
+                                            style:
+                                                TextStyle(color: Colors.grey),
                                             children: [
                                               TextSpan(
                                                 text: 'Terms and Conditions',
@@ -519,7 +524,8 @@ class _SignUpPageState extends State<SignUpPage> {
                                   ),
                                   const SizedBox(height: 24),
                                   ElevatedButton.icon(
-                                    onPressed: _isLoading ? null : _handleSignUp,
+                                    onPressed:
+                                        _isLoading ? null : _handleSignUp,
                                     icon: _isLoading
                                         ? const SizedBox(
                                             width: 20,

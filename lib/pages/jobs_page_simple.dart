@@ -219,8 +219,15 @@ class _JobsPageSimpleState extends State<JobsPageSimple> {
                 Expanded(
                   child: Button(
                     variant: ButtonVariant.outline,
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/new-job');
+                    onPressed: () async {
+                      final result = await Navigator.pushNamed(
+                        context,
+                        '/new-job',
+                        arguments: job,
+                      );
+                      if (result == true) {
+                        _loadJobs(); // Refresh the jobs list
+                      }
                     },
                     text: 'Edit',
                   ),
@@ -249,7 +256,12 @@ class _JobsPageSimpleState extends State<JobsPageSimple> {
       actions: [
         IconButton(
           icon: const Icon(Icons.add),
-          onPressed: () => Navigator.pushNamed(context, '/new-job'),
+          onPressed: () async {
+            final result = await Navigator.pushNamed(context, '/new-job');
+            if (result == true) {
+              _loadJobs(); // Refresh the jobs list
+            }
+          },
           tooltip: 'Add Job',
         ),
       ],
@@ -271,8 +283,11 @@ class _JobsPageSimpleState extends State<JobsPageSimple> {
               ),
               const SizedBox(width: 16),
               Button(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/new-job');
+                onPressed: () async {
+                  final result = await Navigator.pushNamed(context, '/new-job');
+                  if (result == true) {
+                    _loadJobs(); // Refresh the jobs list
+                  }
                 },
                 text: 'Add Job',
               ),

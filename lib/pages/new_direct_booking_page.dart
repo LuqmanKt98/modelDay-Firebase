@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:new_flutter/widgets/app_layout.dart';
+import 'package:new_flutter/widgets/ui/agent_dropdown.dart';
 import 'package:new_flutter/theme/app_theme.dart';
 
 class NewDirectBookingPage extends StatefulWidget {
@@ -34,6 +35,7 @@ class _NewDirectBookingPageState extends State<NewDirectBookingPage> {
   String _selectedCurrency = 'USD';
   String _selectedStatus = 'Scheduled';
   String _selectedPaymentStatus = 'Unpaid';
+  String? _selectedAgentId;
   DateTime? _selectedDate;
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
@@ -171,6 +173,17 @@ class _NewDirectBookingPageState extends State<NewDirectBookingPage> {
         _buildTextField(
           controller: _locationController,
           label: 'Location',
+        ),
+        const SizedBox(height: 16),
+        AgentDropdown(
+          selectedAgentId: _selectedAgentId,
+          labelText: 'Booking Agent',
+          hintText: 'Select an agent',
+          onChanged: (value) {
+            setState(() {
+              _selectedAgentId = value;
+            });
+          },
         ),
       ],
     );

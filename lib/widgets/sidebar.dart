@@ -29,7 +29,8 @@ class Sidebar extends StatefulWidget {
 }
 
 class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
-  static bool isEventTypesOpen = false; // Start collapsed by default and make it static to persist
+  static bool isEventTypesOpen =
+      false; // Start collapsed by default and make it static to persist
   late AnimationController _animationController;
   late Animation<double> _expandAnimation;
   late AnimationController _blinkAnimationController;
@@ -39,7 +40,7 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
     {
       'label': 'Option',
       'icon': Icons.schedule,
-      'path': '/new-option',
+      'path': '/options',
       'color': Colors.blue,
     },
     {
@@ -181,169 +182,173 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
           color: Colors.black,
           child: Column(
             children: [
-          // Logo and close button
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                Container(
-                  height: 32,
-                  width: 32,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16), // Make it circular
-                    border: Border.all(
-                      color: AppTheme.goldColor.withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.asset(
-                      'assets/images/model_day_logo.png',
-                      width: 32,
+              // Logo and close button
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    Container(
                       height: 32,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        // Fallback to text logo if asset fails to load
-                        return Container(
+                      width: 32,
+                      decoration: BoxDecoration(
+                        borderRadius:
+                            BorderRadius.circular(16), // Make it circular
+                        border: Border.all(
+                          color: AppTheme.goldColor.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.asset(
+                          'assets/images/model_day_logo.png',
                           width: 32,
                           height: 32,
-                          decoration: BoxDecoration(
-                            color: AppTheme.goldColor,
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'M',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            // Fallback to text logo if asset fails to load
+                            return Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: AppTheme.goldColor,
+                                borderRadius: BorderRadius.circular(16),
                               ),
-                            ),
-                          ),
-                        );
-                      },
+                              child: const Center(
+                                child: Text(
+                                  'M',
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Model Day',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const Spacer(),
+                    // Show appropriate button based on platform
+                    if (widget.isDesktop)
+                      EnhancedIconButton(
+                        icon: Icons.chevron_left,
+                        onPressed: widget.onCloseSidebar,
+                        color: Colors.white70,
+                        size: 20,
+                      )
+                    else
+                      EnhancedIconButton(
+                        icon: Icons.close,
+                        onPressed: widget.onCloseSidebar,
+                        color: Colors.white70,
+                        size: 20,
+                      ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                const Text(
-                  'Model Day',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-                const Spacer(),
-                // Show appropriate button based on platform
-                if (widget.isDesktop)
-                  EnhancedIconButton(
-                    icon: Icons.chevron_left,
-                    onPressed: widget.onCloseSidebar,
-                    color: Colors.white70,
-                    size: 20,
-                  )
-                else
-                  EnhancedIconButton(
-                    icon: Icons.close,
-                    onPressed: widget.onCloseSidebar,
-                    color: Colors.white70,
-                    size: 20,
-                  ),
-              ],
-            ),
-          ),
-
-          // Navigation items
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Main Features
-                  _buildNavItem('Welcome', Icons.home, '/welcome'),
-                  _buildNavItem('Calendar', Icons.calendar_today, '/calendar'),
-                  _buildNavItem('Community Board', Icons.forum_outlined, '/community-board'),
-                  _buildNavItem(
-                    'Full Schedule',
-                    Icons.list,
-                    '/all-activities',
-                  ),
-
-                  // Event Types Section
-                  _buildCollapsibleSection(),
-
-                  // AI Features
-                  _buildNavItem('Model Day AI', Icons.chat, '/ai-chat'),
-
-                  // Network Section
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16.0),
-                    child: Text(
-                      'Network',
-                      style: TextStyle(color: Colors.white38, fontSize: 12),
-                    ),
-                  ),
-                  _buildNavItem('Agencies', Icons.business, '/agencies'),
-                  _buildNavItem('Agents', Icons.person, '/agents'),
-                  _buildNavItem(
-                    'Industry Contacts',
-                    Icons.contacts,
-                    '/industry-contacts',
-                  ),
-
-                  // Gallery Section
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16.0),
-                    child: Text(
-                      'Gallery',
-                      style: TextStyle(color: Colors.white38, fontSize: 12),
-                    ),
-                  ),
-                  _buildNavItem(
-                    'Job Gallery',
-                    Icons.photo_library,
-                    '/job-gallery',
-                  ),
-
-                  // For Agents Section
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16.0),
-                    child: Text(
-                      'For Agents',
-                      style: TextStyle(color: Colors.white38, fontSize: 12),
-                    ),
-                  ),
-                  _buildNavItem(
-                    'Submit Event for Model',
-                    Icons.send_outlined,
-                    '/submit-event',
-                  ),
-
-                  // Settings Section
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16.0),
-                    child: Text(
-                      'Settings',
-                      style: TextStyle(color: Colors.white38, fontSize: 12),
-                    ),
-                  ),
-                  _buildNavItem('Profile', Icons.person_outline, '/profile'),
-                  _buildNavItem('Settings', Icons.settings, '/settings'),
-
-                  // Tour Button
-                  const SizedBox(height: 16),
-                  _buildTourButton(),
-                ],
               ),
-            ),
-          ),
 
-          // User Profile Section at bottom
-          _buildUserProfileSection(),
+              // Navigation items
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Main Features
+                      _buildNavItem('Welcome', Icons.home, '/welcome'),
+                      _buildNavItem(
+                          'Calendar', Icons.calendar_today, '/calendar'),
+                      _buildNavItemWithText(
+                          'Community Board', '💬', '/community-board'),
+                      _buildNavItem(
+                        'Full Schedule',
+                        Icons.list,
+                        '/all-activities',
+                      ),
+
+                      // Event Types Section
+                      _buildCollapsibleSection(),
+
+                      // AI Features
+                      _buildNavItem('Model Day AI', Icons.chat, '/ai-chat'),
+
+                      // Network Section
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                        child: Text(
+                          'Network',
+                          style: TextStyle(color: Colors.white38, fontSize: 12),
+                        ),
+                      ),
+                      _buildNavItem('Agencies', Icons.business, '/agencies'),
+                      _buildNavItem('Agents', Icons.person, '/agents'),
+                      _buildNavItem(
+                        'Industry Contacts',
+                        Icons.contacts,
+                        '/industry-contacts',
+                      ),
+
+                      // Gallery Section
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                        child: Text(
+                          'Gallery',
+                          style: TextStyle(color: Colors.white38, fontSize: 12),
+                        ),
+                      ),
+                      _buildNavItem(
+                        'Job Gallery',
+                        Icons.photo_library,
+                        '/job-gallery',
+                      ),
+
+                      // For Agents Section
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                        child: Text(
+                          'For Agents',
+                          style: TextStyle(color: Colors.white38, fontSize: 12),
+                        ),
+                      ),
+                      _buildNavItemWithText(
+                        'Submit Event for Model',
+                        '+',
+                        '/submit-event',
+                      ),
+
+                      // Settings Section
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                        child: Text(
+                          'Settings',
+                          style: TextStyle(color: Colors.white38, fontSize: 12),
+                        ),
+                      ),
+                      _buildNavItem(
+                          'Profile', Icons.person_outline, '/profile'),
+                      _buildNavItem('Settings', Icons.settings, '/settings'),
+
+                      // Tour Button
+                      const SizedBox(height: 16),
+                      _buildTourButton(),
+                    ],
+                  ),
+                ),
+              ),
+
+              // User Profile Section at bottom
+              _buildUserProfileSection(),
             ],
           ),
         ),
@@ -357,7 +362,8 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         border: isEventTypesOpen
-            ? Border.all(color: AppTheme.goldColor.withValues(alpha: 0.3), width: 1)
+            ? Border.all(
+                color: AppTheme.goldColor.withValues(alpha: 0.3), width: 1)
             : null,
       ),
       child: Column(
@@ -370,81 +376,83 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
             ),
-          child: ListTile(
-            leading: SizedBox(
-              width: 24,
-              height: 24,
-              child: EnhancedIcon(
-                Icons.event,
-                size: 20,
-                color: isEventTypesOpen ? AppTheme.goldColor : Colors.white,
-              ),
-            ),
-            title: Text(
-              'Event Types',
-              style: TextStyle(
-                color: isEventTypesOpen ? AppTheme.goldColor : Colors.white70,
-                fontWeight: isEventTypesOpen ? FontWeight.w600 : FontWeight.normal,
-              ),
-            ),
-            trailing: AnimatedRotation(
-              turns: isEventTypesOpen ? 0.5 : 0.0,
-              duration: const Duration(milliseconds: 300),
-              child: SizedBox(
+            child: ListTile(
+              leading: SizedBox(
                 width: 24,
                 height: 24,
                 child: EnhancedIcon(
-                  Icons.expand_more,
+                  Icons.event,
                   size: 20,
                   color: isEventTypesOpen ? AppTheme.goldColor : Colors.white,
                 ),
               ),
-            ),
-            onTap: _toggleEventTypes,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-        // Animated collapsible content
-        SizeTransition(
-          sizeFactor: _expandAnimation,
-          child: FadeTransition(
-            opacity: _expandAnimation,
-            child: Container(
-              margin: const EdgeInsets.only(left: 8.0, top: 4.0),
-              child: Column(
-                children: eventTypes
-                    .map(
-                      (type) => Container(
-                        margin: const EdgeInsets.only(bottom: 2.0),
-                        child: _buildNavItem(
-                          type['label'] as String,
-                          type['icon'] as IconData,
-                          type['path'] as String,
-                          color: type['color'] as Color,
-                          isSubItem: true,
-                        ),
-                      ),
-                    )
-                    .toList(),
+              title: Text(
+                'Event Types',
+                style: TextStyle(
+                  color: isEventTypesOpen ? AppTheme.goldColor : Colors.white70,
+                  fontWeight:
+                      isEventTypesOpen ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+              trailing: AnimatedRotation(
+                turns: isEventTypesOpen ? 0.5 : 0.0,
+                duration: const Duration(milliseconds: 300),
+                child: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: EnhancedIcon(
+                    Icons.expand_more,
+                    size: 20,
+                    color: isEventTypesOpen ? AppTheme.goldColor : Colors.white,
+                  ),
+                ),
+              ),
+              onTap: _toggleEventTypes,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
               ),
             ),
           ),
-        ),
-      ],
-    ),
+          // Animated collapsible content
+          SizeTransition(
+            sizeFactor: _expandAnimation,
+            child: FadeTransition(
+              opacity: _expandAnimation,
+              child: Container(
+                margin: const EdgeInsets.only(left: 8.0, top: 4.0),
+                child: Column(
+                  children: eventTypes
+                      .map(
+                        (type) => Container(
+                          margin: const EdgeInsets.only(bottom: 2.0),
+                          child: _buildNavItem(
+                            type['label'] as String,
+                            type['icon'] as IconData,
+                            type['path'] as String,
+                            color: type['color'] as Color,
+                            isSubItem: true,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildNavItem(
+  Widget _buildNavItemWithText(
     String label,
-    IconData icon,
+    String iconText,
     String path, {
     Color? color,
     bool isSubItem = false,
   }) {
     final isSelected = path == widget.currentPage;
+
     return Container(
       margin: isSubItem
           ? const EdgeInsets.only(left: 8.0, right: 4.0)
@@ -488,13 +496,91 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
               leading: SizedBox(
                 width: isSubItem ? 18 : 24,
                 height: isSubItem ? 18 : 24,
-                child: EnhancedIcon(
-                  icon,
-                  size: isSubItem ? 16 : 20,
-                  color: isSelected
-                      ? AppTheme.goldColor
-                      : (color ?? Colors.white),
-                  semanticLabel: label,
+                child: Center(
+                  child: Text(
+                    iconText,
+                    style: TextStyle(
+                      fontSize: isSubItem ? 12 : 18,
+                      fontWeight: FontWeight.bold,
+                      color: isSelected ? AppTheme.goldColor : Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              title: Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? AppTheme.goldColor : Colors.white70,
+                  fontSize: isSubItem ? 13 : 14,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(
+    String label,
+    IconData icon,
+    String path, {
+    Color? color,
+    bool isSubItem = false,
+  }) {
+    final isSelected = path == widget.currentPage;
+
+    return Container(
+      margin: isSubItem
+          ? const EdgeInsets.only(left: 8.0, right: 4.0)
+          : EdgeInsets.zero,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          hoverColor: AppTheme.goldColor.withValues(alpha: 0.1),
+          splashColor: AppTheme.goldColor.withValues(alpha: 0.2),
+          onTap: () {
+            // Don't refresh if already on the same page
+            if (path == widget.currentPage) return;
+
+            final index = eventTypes.indexWhere((type) => type['path'] == path);
+            if (index != -1) {
+              widget.onItemSelected(index);
+            }
+
+            // Only close sidebar on mobile/tablet, not desktop
+            if (!widget.isDesktop) {
+              widget.onCloseSidebar();
+            }
+
+            // Navigate to the new page using navigation guard to prevent loops
+            NavigationGuard.replaceTo(context, path);
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: isSelected
+                  ? AppTheme.goldColor.withValues(alpha: 0.15)
+                  : Colors.transparent,
+            ),
+            child: ListTile(
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: isSubItem ? 12.0 : 16.0,
+                vertical: 0,
+              ),
+              leading: SizedBox(
+                width: isSubItem ? 18 : 24,
+                height: isSubItem ? 18 : 24,
+                child: Center(
+                  child: Icon(
+                    icon,
+                    size: isSubItem ? 16 : 20,
+                    color: isSelected ? AppTheme.goldColor : Colors.white,
+                    semanticLabel: label,
+                  ),
                 ),
               ),
               title: Text(
@@ -626,7 +712,8 @@ class _SidebarState extends State<Sidebar> with TickerProviderStateMixin {
                 _showTourOverlay();
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 12.0),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
                   color: Colors.transparent,

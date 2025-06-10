@@ -3,10 +3,10 @@ import '../services/castings_service.dart';
 class Casting {
   final String id;
   final String title;
-  final String description;
+  final String? description;
   final DateTime date;
-  final String location;
-  final String requirements;
+  final String? location;
+  final String? requirements;
   final String status;
   final String? clientName;
   final double? rate;
@@ -16,10 +16,10 @@ class Casting {
   Casting({
     required this.id,
     required this.title,
-    required this.description,
+    this.description,
     required this.date,
-    required this.location,
-    required this.requirements,
+    this.location,
+    this.requirements,
     required this.status,
     this.clientName,
     this.rate,

@@ -86,6 +86,102 @@ class _CalendarPageState extends State<CalendarPage> {
     return _events[DateTime(day.year, day.month, day.day)] ?? [];
   }
 
+  void _showAddEventDialog(DateTime selectedDate) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: const Text(
+          'Add New Event',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Event Type',
+              style: TextStyle(color: Colors.white),
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.grey[800],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              dropdownColor: Colors.grey[800],
+              style: const TextStyle(color: Colors.white),
+              hint: const Text(
+                'Select event type',
+                style: TextStyle(color: Colors.grey),
+              ),
+              items: const [
+                DropdownMenuItem(value: 'job', child: Text('Job')),
+                DropdownMenuItem(value: 'casting', child: Text('Casting')),
+                DropdownMenuItem(value: 'test', child: Text('Test')),
+                DropdownMenuItem(value: 'meeting', child: Text('Meeting')),
+                DropdownMenuItem(value: 'other', child: Text('Other')),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  Navigator.pop(context);
+                  _navigateToEventCreation(value, selectedDate);
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Will be scheduled for ${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _navigateToEventCreation(String eventType, DateTime selectedDate) {
+    switch (eventType) {
+      case 'job':
+        Navigator.pushNamed(
+          context,
+          '/new-job',
+          arguments: {'preselectedDate': selectedDate},
+        ).then((_) => _loadEvents());
+        break;
+      case 'casting':
+        Navigator.pushNamed(
+          context,
+          '/new-casting',
+          arguments: {'preselectedDate': selectedDate},
+        ).then((_) => _loadEvents());
+        break;
+      case 'test':
+        Navigator.pushNamed(
+          context,
+          '/new-test',
+          arguments: {'preselectedDate': selectedDate},
+        ).then((_) => _loadEvents());
+        break;
+      default:
+        Navigator.pushNamed(
+          context,
+          '/new-event',
+          arguments: {'preselectedDate': selectedDate, 'eventType': eventType},
+        ).then((_) => _loadEvents());
+        break;
+    }
+  }
+
   Color _getEventColor(dynamic event) {
     if (event is Job) return Colors.blue;
     if (event is Casting) return Colors.purple;
@@ -315,6 +411,7 @@ class _CalendarPageState extends State<CalendarPage> {
                       _selectedDay = selectedDay;
                       _focusedDay = focusedDay;
                     });
+                    _showAddEventDialog(selectedDay);
                   },
                   onFormatChanged: (format) {
                     setState(() {

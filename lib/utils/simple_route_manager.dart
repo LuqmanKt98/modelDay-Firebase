@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/event.dart';
+import '../models/job.dart';
 import '../pages/splash_page.dart';
 import '../pages/landing_page.dart';
 import '../pages/sign_in_page.dart';
@@ -9,6 +10,7 @@ import '../pages/calendar_page.dart';
 import '../pages/all_activities_page.dart';
 import '../pages/enhanced_direct_bookings_page.dart';
 import '../pages/direct_options_page.dart';
+import '../pages/options_list_page.dart';
 import '../pages/jobs_page_simple.dart';
 import '../pages/castings_page.dart';
 import '../pages/tests_page.dart';
@@ -45,15 +47,19 @@ import '../pages/submit_event_page.dart';
 
 /// Simple route manager to handle navigation without complex state management
 class SimpleRouteManager {
-  static Widget getPageForRoute(String route, {bool isAuthenticated = false, bool isInitialized = true}) {
-    debugPrint('🧭 SimpleRouteManager.getPageForRoute: $route (auth: $isAuthenticated, init: $isInitialized)');
-    
+  static Widget getPageForRoute(String route,
+      {bool isAuthenticated = false,
+      bool isInitialized = true,
+      Object? arguments}) {
+    debugPrint(
+        '🧭 SimpleRouteManager.getPageForRoute: $route (auth: $isAuthenticated, init: $isInitialized)');
+
     // If not initialized, always show splash
     if (!isInitialized) {
       debugPrint('➡️ Not initialized, showing splash');
       return const SplashPage();
     }
-    
+
     // Handle specific routes
     switch (route) {
       case '/':
@@ -65,35 +71,37 @@ class SimpleRouteManager {
           debugPrint('➡️ Root: not authenticated → landing');
           return const LandingPage();
         }
-      
+
       case '/landing':
         debugPrint('➡️ Landing page');
         return const LandingPage();
-        
+
       case '/signin':
         debugPrint('➡️ Sign-in page');
         return const SignInPage();
-        
+
       case '/signup':
         debugPrint('➡️ Sign-up page');
         return const SignUpPage();
-        
+
       case '/welcome':
         if (isAuthenticated) {
           debugPrint('➡️ Welcome page (authenticated)');
           return const WelcomePage();
         } else {
-          debugPrint('➡️ Welcome page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ Welcome page requested but not authenticated → sign-in');
           return const SignInPage();
         }
-        
+
       // Calendar and Activities
       case '/calendar':
         if (isAuthenticated) {
           debugPrint('➡️ Calendar page (authenticated)');
           return const CalendarPage();
         } else {
-          debugPrint('➡️ Calendar page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ Calendar page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -102,7 +110,8 @@ class SimpleRouteManager {
           debugPrint('➡️ All activities page (authenticated)');
           return const AllActivitiesPage();
         } else {
-          debugPrint('➡️ All activities page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ All activities page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -111,7 +120,8 @@ class SimpleRouteManager {
           debugPrint('➡️ Community board page (authenticated)');
           return const CommunityBoardPage();
         } else {
-          debugPrint('➡️ Community board page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ Community board page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -128,9 +138,13 @@ class SimpleRouteManager {
       case '/new-job':
         if (isAuthenticated) {
           debugPrint('➡️ New job page (authenticated)');
-          return const NewJobPage();
+          final job = arguments as Job?;
+          debugPrint('🔧 Route arguments: $arguments');
+          debugPrint('🔧 Parsed job: ${job?.id} - ${job?.clientName}');
+          return NewJobPage(job: job);
         } else {
-          debugPrint('➡️ New job page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ New job page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -140,7 +154,8 @@ class SimpleRouteManager {
           debugPrint('➡️ AI jobs page (authenticated)');
           return const AiJobsPage();
         } else {
-          debugPrint('➡️ AI jobs page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ AI jobs page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -149,7 +164,8 @@ class SimpleRouteManager {
           debugPrint('➡️ New AI job page (authenticated)');
           return const NewAiJobPage();
         } else {
-          debugPrint('➡️ New AI job page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ New AI job page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -159,7 +175,8 @@ class SimpleRouteManager {
           debugPrint('➡️ Direct bookings page (authenticated)');
           return const EnhancedDirectBookingsPage();
         } else {
-          debugPrint('➡️ Direct bookings page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ Direct bookings page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -168,16 +185,30 @@ class SimpleRouteManager {
           debugPrint('➡️ Direct options page (authenticated)');
           return const DirectOptionsPage();
         } else {
-          debugPrint('➡️ Direct options page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ Direct options page requested but not authenticated → sign-in');
+          return const SignInPage();
+        }
+
+      case '/options':
+        if (isAuthenticated) {
+          debugPrint('➡️ Options list page (authenticated)');
+          return const OptionsListPage();
+        } else {
+          debugPrint(
+              '➡️ Options list page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
       case '/new-option':
         if (isAuthenticated) {
           debugPrint('➡️ New option page (authenticated)');
-          return NewEventPage(eventType: EventType.option); // Using NewEventPage for new options
+          return NewEventPage(
+              eventType:
+                  EventType.option); // Using NewEventPage for new options
         } else {
-          debugPrint('➡️ New option page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ New option page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -186,7 +217,8 @@ class SimpleRouteManager {
           debugPrint('➡️ Other events page (authenticated)');
           return const OtherPage();
         } else {
-          debugPrint('➡️ Other events page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ Other events page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -196,7 +228,8 @@ class SimpleRouteManager {
           debugPrint('➡️ Castings page (authenticated)');
           return const CastingsPage();
         } else {
-          debugPrint('➡️ Castings page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ Castings page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -214,7 +247,8 @@ class SimpleRouteManager {
           debugPrint('➡️ On stay page (authenticated)');
           return const OnStayPage();
         } else {
-          debugPrint('➡️ On stay page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ On stay page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -223,7 +257,8 @@ class SimpleRouteManager {
           debugPrint('➡️ Shootings page (authenticated)');
           return const ShootingsPage();
         } else {
-          debugPrint('➡️ Shootings page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ Shootings page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -232,7 +267,8 @@ class SimpleRouteManager {
           debugPrint('➡️ Polaroids page (authenticated)');
           return const PolaroidsPage();
         } else {
-          debugPrint('➡️ Polaroids page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ Polaroids page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -241,7 +277,8 @@ class SimpleRouteManager {
           debugPrint('➡️ New polaroid page (authenticated)');
           return const NewPolaroidPage();
         } else {
-          debugPrint('➡️ New polaroid page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ New polaroid page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -250,7 +287,8 @@ class SimpleRouteManager {
           debugPrint('➡️ Meetings page (authenticated)');
           return const MeetingsPage();
         } else {
-          debugPrint('➡️ Meetings page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ Meetings page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -259,7 +297,8 @@ class SimpleRouteManager {
           debugPrint('➡️ New meeting page (authenticated)');
           return NewEventPage(eventType: EventType.meeting);
         } else {
-          debugPrint('➡️ New meeting page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ New meeting page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -268,7 +307,8 @@ class SimpleRouteManager {
           debugPrint('➡️ New casting page (authenticated)');
           return NewEventPage(eventType: EventType.casting);
         } else {
-          debugPrint('➡️ New casting page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ New casting page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -277,7 +317,8 @@ class SimpleRouteManager {
           debugPrint('➡️ New test page (authenticated)');
           return NewEventPage(eventType: EventType.test);
         } else {
-          debugPrint('➡️ New test page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ New test page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -286,7 +327,8 @@ class SimpleRouteManager {
           debugPrint('➡️ New on stay page (authenticated)');
           return NewEventPage(eventType: EventType.onStay);
         } else {
-          debugPrint('➡️ New on stay page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ New on stay page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -295,7 +337,8 @@ class SimpleRouteManager {
           debugPrint('➡️ New shooting page (authenticated)');
           return NewEventPage(eventType: EventType.polaroids);
         } else {
-          debugPrint('➡️ New shooting page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ New shooting page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -304,7 +347,8 @@ class SimpleRouteManager {
           debugPrint('➡️ New direct booking page (authenticated)');
           return NewEventPage(eventType: EventType.directBooking);
         } else {
-          debugPrint('➡️ New direct booking page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ New direct booking page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -313,7 +357,8 @@ class SimpleRouteManager {
           debugPrint('➡️ New direct option page (authenticated)');
           return NewEventPage(eventType: EventType.directOption);
         } else {
-          debugPrint('➡️ New direct option page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ New direct option page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -322,7 +367,8 @@ class SimpleRouteManager {
           debugPrint('➡️ Models page (authenticated)');
           return const ModelsPage();
         } else {
-          debugPrint('➡️ Models page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ Models page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -331,7 +377,8 @@ class SimpleRouteManager {
           debugPrint('➡️ New model page (authenticated)');
           return const NewModelPage();
         } else {
-          debugPrint('➡️ New model page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ New model page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -341,7 +388,8 @@ class SimpleRouteManager {
           debugPrint('➡️ Agencies page (authenticated)');
           return const AgenciesPage();
         } else {
-          debugPrint('➡️ Agencies page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ Agencies page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -350,7 +398,8 @@ class SimpleRouteManager {
           debugPrint('➡️ New agency page (authenticated)');
           return const NewAgencyPage();
         } else {
-          debugPrint('➡️ New agency page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ New agency page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -359,7 +408,8 @@ class SimpleRouteManager {
           debugPrint('➡️ Agents page (authenticated)');
           return const AgentsPage();
         } else {
-          debugPrint('➡️ Agents page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ Agents page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -368,7 +418,8 @@ class SimpleRouteManager {
           debugPrint('➡️ New agent page (authenticated)');
           return const NewAgentPage();
         } else {
-          debugPrint('➡️ New agent page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ New agent page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -377,7 +428,8 @@ class SimpleRouteManager {
           debugPrint('➡️ Industry contacts page (authenticated)');
           return const IndustryContactsPage();
         } else {
-          debugPrint('➡️ Industry contacts page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ Industry contacts page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -386,7 +438,8 @@ class SimpleRouteManager {
           debugPrint('➡️ New industry contact page (authenticated)');
           return const NewIndustryContactPage();
         } else {
-          debugPrint('➡️ New industry contact page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ New industry contact page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -396,7 +449,8 @@ class SimpleRouteManager {
           debugPrint('➡️ Profile page (authenticated)');
           return const ProfilePage();
         } else {
-          debugPrint('➡️ Profile page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ Profile page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -405,7 +459,8 @@ class SimpleRouteManager {
           debugPrint('➡️ Settings page (authenticated)');
           return const SettingsPage();
         } else {
-          debugPrint('➡️ Settings page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ Settings page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -415,7 +470,8 @@ class SimpleRouteManager {
           debugPrint('➡️ Job gallery page (authenticated)');
           return const JobGalleryPage();
         } else {
-          debugPrint('➡️ Job gallery page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ Job gallery page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -424,7 +480,8 @@ class SimpleRouteManager {
           debugPrint('➡️ New job gallery page (authenticated)');
           return const NewJobGalleryPage();
         } else {
-          debugPrint('➡️ New job gallery page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ New job gallery page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -433,7 +490,8 @@ class SimpleRouteManager {
           debugPrint('➡️ AI chat page (authenticated)');
           return const AIChatPage();
         } else {
-          debugPrint('➡️ AI chat page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ AI chat page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -442,7 +500,8 @@ class SimpleRouteManager {
           debugPrint('➡️ Submit event page (authenticated)');
           return const SubmitEventPage();
         } else {
-          debugPrint('➡️ Submit event page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ Submit event page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -465,7 +524,8 @@ class SimpleRouteManager {
           debugPrint('➡️ Add event page (authenticated)');
           return const AddEventPage();
         } else {
-          debugPrint('➡️ Add event page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ Add event page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -474,7 +534,8 @@ class SimpleRouteManager {
           debugPrint('➡️ New event page (authenticated)');
           return NewEventPage(eventType: EventType.other);
         } else {
-          debugPrint('➡️ New event page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ New event page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -484,7 +545,8 @@ class SimpleRouteManager {
           debugPrint('➡️ Firebase test page (authenticated)');
           return const FirebaseTestPage();
         } else {
-          debugPrint('➡️ Firebase test page requested but not authenticated → sign-in');
+          debugPrint(
+              '➡️ Firebase test page requested but not authenticated → sign-in');
           return const SignInPage();
         }
 
@@ -499,7 +561,7 @@ class SimpleRouteManager {
         }
     }
   }
-  
+
   /// Check if a route is public (doesn't require authentication)
   static bool isPublicRoute(String route) {
     const publicRoutes = [
@@ -512,7 +574,7 @@ class SimpleRouteManager {
     ];
     return publicRoutes.contains(route);
   }
-  
+
   /// Get the appropriate route based on auth status
   static String getDefaultRoute({bool isAuthenticated = false}) {
     if (isAuthenticated) {

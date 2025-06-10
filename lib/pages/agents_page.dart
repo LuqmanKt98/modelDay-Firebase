@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:new_flutter/widgets/app_layout.dart';
 import 'package:new_flutter/widgets/ui/button.dart' as ui;
 import 'package:new_flutter/widgets/ui/input.dart' as ui;
@@ -6,7 +7,7 @@ import 'package:new_flutter/widgets/ui/card.dart' as ui;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/agent.dart';
-import '../services/agents_service.dart';
+import '../providers/agents_provider.dart';
 
 class AgentsPage extends StatefulWidget {
   const AgentsPage({super.key});
@@ -16,61 +17,20 @@ class AgentsPage extends StatefulWidget {
 }
 
 class _AgentsPageState extends State<AgentsPage> {
-  bool _isLoading = true;
-  String? _error;
-  List<Agent> _agents = [];
-  String _searchTerm = '';
-  final AgentsService _agentsService = AgentsService();
   final _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadAgents();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AgentsProvider>().loadAgents();
+    });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadAgents() async {
-    try {
-      if (mounted) {
-        setState(() {
-          _isLoading = true;
-          _error = null;
-        });
-      }
-
-      final agents = await _agentsService.getAgents();
-      agents.sort((a, b) => a.name.compareTo(b.name));
-
-      if (mounted) {
-        setState(() {
-          _agents = agents;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = 'Failed to load agents: $e';
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  List<Agent> get _filteredAgents {
-    if (_searchTerm.isEmpty) return _agents;
-    final term = _searchTerm.toLowerCase();
-    return _agents.where((agent) {
-      return agent.name.toLowerCase().contains(term) ||
-          agent.agency?.toLowerCase().contains(term) == true ||
-          agent.email?.toLowerCase().contains(term) == true;
-    }).toList();
   }
 
   Future<void> _launchUrl(String url) async {
@@ -118,26 +78,18 @@ class _AgentsPageState extends State<AgentsPage> {
   }
 
   Future<void> _deleteAgent(Agent agent) async {
-    try {
-      await _agentsService.deleteAgent(agent.id!);
-      _loadAgents(); // Refresh the list
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Agent deleted successfully'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error deleting agent: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    final provider = context.read<AgentsProvider>();
+    final success = await provider.deleteAgent(agent.id!);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success
+              ? 'Agent deleted successfully'
+              : provider.error ?? 'Error deleting agent'),
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
     }
   }
 
@@ -191,12 +143,15 @@ class _AgentsPageState extends State<AgentsPage> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.edit_outlined),
-                      onPressed: () {
-                        Navigator.pushNamed(
+                      onPressed: () async {
+                        final result = await Navigator.pushNamed(
                           context,
                           '/new-agent',
                           arguments: agent.id,
                         );
+                        if (result == true && mounted) {
+                          context.read<AgentsProvider>().loadAgents();
+                        }
                       },
                       tooltip: 'Edit',
                     ),
@@ -323,180 +278,188 @@ class _AgentsPageState extends State<AgentsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredAgents = _filteredAgents;
-
-    return AppLayout(
-      currentPage: '/agents',
-      title: 'Agents',
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Manage Your Agents',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    ui.Button(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/new-agent');
-                      },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.add, size: 20, color: Colors.grey[100]),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Add Agent',
-                            style: TextStyle(
-                              color: Colors.grey[100],
-                              fontSize: 15,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
+    return Consumer<AgentsProvider>(
+      builder: (context, provider, child) {
+        return AppLayout(
+          currentPage: '/agents',
+          title: 'Agents',
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.15),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[900],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ui.Input(
-                    prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
-                    hintText: 'Search agents...',
-                    controller: _searchController,
-                    onChanged: (value) => setState(() => _searchTerm = value),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: _loadAgents,
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _error != null
-                      ? Center(
-                          child: Column(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Manage Your Agents',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        ui.Button(
+                          onPressed: () async {
+                            final result = await Navigator.pushNamed(
+                                context, '/new-agent');
+                            if (result == true) {
+                              provider.loadAgents();
+                            }
+                          },
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
-                                Icons.error_outline,
-                                size: 64,
-                                color: Colors.red[300],
-                              ),
-                              const SizedBox(height: 16),
+                              Icon(Icons.add,
+                                  size: 20, color: Colors.grey[100]),
+                              const SizedBox(width: 8),
                               Text(
-                                'Error',
+                                'Add Agent',
                                 style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.red[700],
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _error!,
-                                style: TextStyle(
-                                  color: Colors.grey[400],
-                                  fontSize: 16,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 24),
-                              ui.Button(
-                                onPressed: _loadAgents,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.refresh,
-                                      size: 20,
-                                      color: Colors.grey[100],
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Try Again',
-                                      style: TextStyle(
-                                        color: Colors.grey[100],
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
+                                  color: Colors.grey[100],
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
                           ),
-                        )
-                      : filteredAgents.isEmpty
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[900],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ui.Input(
+                        prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
+                        hintText: 'Search agents...',
+                        controller: _searchController,
+                        onChanged: (value) => provider.setSearchTerm(value),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: provider.refresh,
+                  child: provider.isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : provider.error != null
                           ? Center(
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
-                                    Icons.person_outline,
+                                    Icons.error_outline,
                                     size: 64,
-                                    color: Colors.grey[400],
+                                    color: Colors.red[300],
                                   ),
                                   const SizedBox(height: 16),
                                   Text(
-                                    'No agents found',
+                                    'Error',
                                     style: TextStyle(
                                       fontSize: 20,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.grey[200],
+                                      color: Colors.red[700],
                                     ),
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    'Try adjusting your search or add a new agent',
+                                    provider.error!,
                                     style: TextStyle(
                                       color: Colors.grey[400],
                                       fontSize: 16,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 24),
+                                  ui.Button(
+                                    onPressed: provider.loadAgents,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.refresh,
+                                          size: 20,
+                                          color: Colors.grey[100],
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Try Again',
+                                          style: TextStyle(
+                                            color: Colors.grey[100],
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
                             )
-                          : ListView.separated(
-                              padding: const EdgeInsets.all(24),
-                              itemCount: filteredAgents.length,
-                              separatorBuilder: (context, index) =>
-                                  const SizedBox(height: 16),
-                              itemBuilder: (context, index) =>
-                                  _buildAgentCard(filteredAgents[index]),
-                            ),
-            ),
+                          : provider.filteredAgents.isEmpty
+                              ? Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.person_outline,
+                                        size: 64,
+                                        color: Colors.grey[400],
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'No agents found',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.grey[200],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Try adjusting your search or add a new agent',
+                                        style: TextStyle(
+                                          color: Colors.grey[400],
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : ListView.separated(
+                                  padding: const EdgeInsets.all(24),
+                                  itemCount: provider.filteredAgents.length,
+                                  separatorBuilder: (context, index) =>
+                                      const SizedBox(height: 16),
+                                  itemBuilder: (context, index) =>
+                                      _buildAgentCard(
+                                          provider.filteredAgents[index]),
+                                ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

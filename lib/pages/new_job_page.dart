@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:new_flutter/models/job.dart';
 import 'package:new_flutter/services/jobs_service.dart';
-import 'package:new_flutter/services/agents_service.dart';
-import 'package:new_flutter/models/agent.dart';
 import 'package:new_flutter/widgets/app_layout.dart';
 import 'package:new_flutter/widgets/ui/input.dart' as ui;
 import 'package:new_flutter/widgets/ui/button.dart';
 import 'package:new_flutter/widgets/ui/safe_dropdown.dart';
+import 'package:new_flutter/widgets/ui/agent_dropdown.dart';
+import 'package:new_flutter/theme/app_theme.dart';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 
 class NewJobPage extends StatefulWidget {
-  const NewJobPage({super.key});
+  final Job? job; // For editing existing job
+
+  const NewJobPage({super.key, this.job});
 
   @override
   State<NewJobPage> createState() => _NewJobPageState();
@@ -45,11 +48,9 @@ class _NewJobPageState extends State<NewJobPage> {
   String _selectedStatus = 'Scheduled';
   String _selectedPaymentStatus = 'Unpaid';
   String? _selectedAgentId;
-  List<Agent> _agents = [];
   final List<PlatformFile> _selectedFiles = [];
   bool _isLoading = false;
   bool _isCustomType = false;
-  bool _isLoadingAgents = true;
   String? _error;
 
   // Job Types
@@ -73,22 +74,95 @@ class _NewJobPageState extends State<NewJobPage> {
 
   // Currencies
   final List<String> _currencies = [
-    'USD', 'EUR', 'PLN', 'ILS', 'JPY', 'KRW', 'GBP', 'CNY', 'AUD'
+    'USD',
+    'EUR',
+    'PLN',
+    'ILS',
+    'JPY',
+    'KRW',
+    'GBP',
+    'CNY',
+    'AUD'
   ];
 
   // Status Options
   final List<String> _statusOptions = [
-    'Scheduled', 'In Progress', 'Completed', 'Canceled'
+    'Scheduled',
+    'In Progress',
+    'Completed',
+    'Canceled'
   ];
 
   final List<String> _paymentStatusOptions = [
-    'Unpaid', 'Partially Paid', 'Paid'
+    'Unpaid',
+    'Partially Paid',
+    'Paid'
   ];
 
   @override
   void initState() {
     super.initState();
-    _loadAgents();
+    debugPrint('🔧 NewJobPage.initState() - job: ${widget.job?.id}');
+    if (widget.job != null) {
+      debugPrint('📝 Loading job data for editing: ${widget.job!.clientName}');
+      _loadJobData();
+    } else {
+      debugPrint('➕ Creating new job');
+    }
+  }
+
+  void _loadJobData() {
+    final job = widget.job!;
+
+    // Load basic information
+    _clientNameController.text = job.clientName;
+    _locationController.text = job.location;
+    _notesController.text = job.notes ?? '';
+
+    // Load job type
+    if (_jobTypes.contains(job.type)) {
+      _selectedJobType = job.type;
+      _isCustomType = false;
+    } else {
+      _customJobTypeController.text = job.type;
+      _isCustomType = true;
+      _selectedJobType = '';
+    }
+
+    // Load dates and times
+    if (job.date.isNotEmpty) {
+      _selectedDate = DateTime.parse(job.date);
+    }
+    if (job.time != null && job.time!.isNotEmpty) {
+      final timeParts = job.time!.split(':');
+      if (timeParts.length == 2) {
+        _startTime = TimeOfDay(
+          hour: int.tryParse(timeParts[0]) ?? 0,
+          minute: int.tryParse(timeParts[1]) ?? 0,
+        );
+      }
+    }
+    if (job.endTime != null && job.endTime!.isNotEmpty) {
+      final timeParts = job.endTime!.split(':');
+      if (timeParts.length == 2) {
+        _endTime = TimeOfDay(
+          hour: int.tryParse(timeParts[0]) ?? 0,
+          minute: int.tryParse(timeParts[1]) ?? 0,
+        );
+      }
+    }
+
+    // Load financial information
+    _rateController.text = job.rate.toString();
+    _extraHoursController.text = job.extraHours?.toString() ?? '';
+    _agencyFeeController.text = job.agencyFeePercentage?.toString() ?? '';
+    _taxController.text = job.taxPercentage?.toString() ?? '';
+
+    // Load other fields
+    _selectedCurrency = job.currency ?? 'USD';
+    _selectedStatus = job.status ?? 'Scheduled';
+    _selectedPaymentStatus = job.paymentStatus ?? 'Unpaid';
+    _selectedAgentId = job.bookingAgent;
   }
 
   @override
@@ -104,26 +178,6 @@ class _NewJobPageState extends State<NewJobPage> {
     _taxController.dispose();
     _additionalFeesController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadAgents() async {
-    try {
-      final agents = await AgentsService().getAgents();
-      if (mounted) {
-        setState(() {
-          _agents = agents;
-          _isLoadingAgents = false;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error loading agents: $e');
-      if (mounted) {
-        setState(() {
-          _agents = []; // Set empty list on error
-          _isLoadingAgents = false;
-        });
-      }
-    }
   }
 
   String _formatTimeOfDay(TimeOfDay? time) {
@@ -160,9 +214,11 @@ class _NewJobPageState extends State<NewJobPage> {
     final additionalFees = double.tryParse(_additionalFeesController.text) ?? 0;
 
     final subtotal = rate + usage + extraHours + additionalFees;
-    final agencyFee = (double.tryParse(_agencyFeeController.text) ?? 0) / 100 * subtotal;
+    final agencyFee =
+        (double.tryParse(_agencyFeeController.text) ?? 0) / 100 * subtotal;
     final afterAgencyFee = subtotal - agencyFee;
-    final tax = (double.tryParse(_taxController.text) ?? 0) / 100 * afterAgencyFee;
+    final tax =
+        (double.tryParse(_taxController.text) ?? 0) / 100 * afterAgencyFee;
 
     return afterAgencyFee - tax;
   }
@@ -229,6 +285,7 @@ class _NewJobPageState extends State<NewJobPage> {
             style: TextStyle(
               fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
               fontSize: isTotal ? 16 : 14,
+              color: Colors.white,
             ),
           ),
           Text(
@@ -236,6 +293,7 @@ class _NewJobPageState extends State<NewJobPage> {
             style: TextStyle(
               fontWeight: isTotal ? FontWeight.w600 : FontWeight.normal,
               fontSize: isTotal ? 16 : 14,
+              color: Colors.white,
             ),
           ),
         ],
@@ -254,7 +312,8 @@ class _NewJobPageState extends State<NewJobPage> {
     try {
       final jobData = {
         'client_name': _clientNameController.text,
-        'type': _isCustomType ? _customJobTypeController.text : _selectedJobType,
+        'type':
+            _isCustomType ? _customJobTypeController.text : _selectedJobType,
         'date': _selectedDate.toIso8601String().split('T')[0],
         'time': _formatTimeOfDay(_startTime),
         'end_time': _formatTimeOfDay(_endTime),
@@ -265,27 +324,40 @@ class _NewJobPageState extends State<NewJobPage> {
         'extra_hours': double.tryParse(_extraHoursController.text),
         'agency_fee_percentage': double.tryParse(_agencyFeeController.text),
         'tax_percentage': double.tryParse(_taxController.text),
-        'additional_fees': double.tryParse(_additionalFeesController.text),
         'status': _selectedStatus,
         'payment_status': _selectedPaymentStatus,
-        'notes': _notesController.text.isNotEmpty ? _notesController.text : null,
+        'notes':
+            _notesController.text.isNotEmpty ? _notesController.text : null,
       };
 
       if (_endDate != null) {
         jobData['end_date'] = _endDate!.toIso8601String().split('T')[0];
       }
 
-      await JobsService.create(jobData);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Job created successfully')),
-        );
-        Navigator.pop(context);
+      if (widget.job != null) {
+        // Update existing job
+        await JobsService.update(widget.job!.id!, jobData);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Job updated successfully')),
+          );
+          Navigator.pop(context, true); // Return true to indicate success
+        }
+      } else {
+        // Create new job
+        await JobsService.create(jobData);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Job created successfully')),
+          );
+          Navigator.pop(context, true); // Return true to indicate success
+        }
       }
     } catch (e) {
       setState(() {
-        _error = 'Failed to create job: $e';
+        _error = widget.job != null
+            ? 'Failed to update job: $e'
+            : 'Failed to create job: $e';
       });
     } finally {
       if (mounted) {
@@ -300,7 +372,7 @@ class _NewJobPageState extends State<NewJobPage> {
   Widget build(BuildContext context) {
     return AppLayout(
       currentPage: '/new-job',
-      title: 'New Job',
+      title: widget.job != null ? 'Edit Job' : 'New Job',
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(0),
         child: Form(
@@ -476,7 +548,9 @@ class _NewJobPageState extends State<NewJobPage> {
                       ),
                       readOnly: true,
                       controller: TextEditingController(
-                        text: _startTime != null ? _formatTimeOfDay(_startTime) : '',
+                        text: _startTime != null
+                            ? _formatTimeOfDay(_startTime)
+                            : '',
                       ),
                       onTap: () async {
                         final time = await showTimePicker(
@@ -501,7 +575,8 @@ class _NewJobPageState extends State<NewJobPage> {
                       ),
                       readOnly: true,
                       controller: TextEditingController(
-                        text: _endTime != null ? _formatTimeOfDay(_endTime) : '',
+                        text:
+                            _endTime != null ? _formatTimeOfDay(_endTime) : '',
                       ),
                       onTap: () async {
                         final time = await showTimePicker(
@@ -554,33 +629,16 @@ class _NewJobPageState extends State<NewJobPage> {
               const SizedBox(height: 24),
 
               // Agent Selection
-              _isLoadingAgents
-                  ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: CircularProgressIndicator(),
-                      ),
-                    )
-                  : _agents.isNotEmpty
-                      ? SafeDropdown(
-                          value: _selectedAgentId,
-                          items: _agents.map((agent) => agent.id ?? '').where((id) => id.isNotEmpty).toList(),
-                          labelText: 'Booking Agent',
-                          hintText: 'Select an agent',
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedAgentId = value;
-                            });
-                          },
-                        )
-                      : ui.Input(
-                          label: 'Booking Agent',
-                          controller: TextEditingController(text: _selectedAgentId ?? ''),
-                          placeholder: 'Enter agent name or ID',
-                          onChanged: (value) {
-                            _selectedAgentId = value;
-                          },
-                        ),
+              AgentDropdown(
+                selectedAgentId: _selectedAgentId,
+                labelText: 'Booking Agent',
+                hintText: 'Select an agent',
+                onChanged: (value) {
+                  setState(() {
+                    _selectedAgentId = value;
+                  });
+                },
+              ),
 
               const SizedBox(height: 24),
 
@@ -629,7 +687,8 @@ class _NewJobPageState extends State<NewJobPage> {
                       ),
                       keyboardType: TextInputType.number,
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*\.?\d*')),
                       ],
                       onChanged: (value) {
                         setState(() {}); // Trigger rebuild for calculation
@@ -646,7 +705,8 @@ class _NewJobPageState extends State<NewJobPage> {
                       ),
                       keyboardType: TextInputType.number,
                       inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*\.?\d*')),
                       ],
                       onChanged: (value) {
                         setState(() {}); // Trigger rebuild for calculation
@@ -805,22 +865,15 @@ class _NewJobPageState extends State<NewJobPage> {
 
               const SizedBox(height: 24),
 
-              // Notes
-              ui.Input(
-                controller: _notesController,
-                placeholder: 'Additional notes (optional)',
-                maxLines: 3,
-              ),
-
               // Financial Summary
               if (_rateController.text.isNotEmpty) ...[
                 const SizedBox(height: 24),
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.blue[50],
+                    color: AppTheme.goldColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue[200]!),
+                    border: Border.all(color: AppTheme.goldColor.withValues(alpha: 0.3)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -830,18 +883,25 @@ class _NewJobPageState extends State<NewJobPage> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
                       ),
                       const SizedBox(height: 12),
-                      _buildSummaryRow('Day Rate', double.tryParse(_rateController.text) ?? 0),
+                      _buildSummaryRow('Day Rate',
+                          double.tryParse(_rateController.text) ?? 0),
                       if (_usageController.text.isNotEmpty)
-                        _buildSummaryRow('Usage', double.tryParse(_usageController.text) ?? 0),
+                        _buildSummaryRow('Usage',
+                            double.tryParse(_usageController.text) ?? 0),
                       if (_extraHoursController.text.isNotEmpty)
                         _buildSummaryRow('Extra Hours', _calculateExtraHours()),
                       if (_additionalFeesController.text.isNotEmpty)
-                        _buildSummaryRow('Additional Fees', double.tryParse(_additionalFeesController.text) ?? 0),
+                        _buildSummaryRow(
+                            'Additional Fees',
+                            double.tryParse(_additionalFeesController.text) ??
+                                0),
                       const Divider(),
-                      _buildSummaryRow('Total', _calculateTotal(), isTotal: true),
+                      _buildSummaryRow('Total', _calculateTotal(),
+                          isTotal: true),
                     ],
                   ),
                 ),
@@ -858,7 +918,7 @@ class _NewJobPageState extends State<NewJobPage> {
               SizedBox(
                 width: double.infinity,
                 child: Button(
-                  text: 'Create Job',
+                  text: widget.job != null ? 'Update Job' : 'Create Job',
                   variant: ButtonVariant.primary,
                   onPressed: _isLoading ? null : _createJob,
                   isLoading: _isLoading,

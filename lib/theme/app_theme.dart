@@ -142,8 +142,16 @@ class AppTheme {
       borderRadius: BorderRadius.circular(radiusMd),
       borderSide: const BorderSide(color: errorColor),
     ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(radiusMd),
+      borderSide: const BorderSide(color: errorColor, width: 2),
+    ),
     contentPadding:
         const EdgeInsets.symmetric(horizontal: spacingMd, vertical: spacingMd),
+    // Ensure consistent text styling
+    labelStyle: const TextStyle(color: textPrimary),
+    floatingLabelStyle: const TextStyle(color: goldColor),
+    hintStyle: const TextStyle(color: textMuted),
   );
 
   // Text Styles

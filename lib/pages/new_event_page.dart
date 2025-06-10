@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:new_flutter/models/event.dart';
 import 'package:new_flutter/services/events_service.dart';
-import 'package:new_flutter/services/agents_service.dart';
-import 'package:new_flutter/models/agent.dart';
 import 'package:new_flutter/widgets/app_layout.dart';
 import 'package:new_flutter/widgets/ui/input.dart' as ui;
 import 'package:new_flutter/widgets/ui/button.dart';
 import 'package:new_flutter/widgets/ui/safe_dropdown.dart';
+import 'package:new_flutter/widgets/ui/agent_dropdown.dart';
 import 'package:new_flutter/theme/app_theme.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
@@ -44,6 +43,13 @@ class _NewEventPageState extends State<NewEventPage> {
   final _hotelCostController = TextEditingController();
   final _pocketMoneyController = TextEditingController();
   final _industryContactController = TextEditingController();
+
+  // New missing field controllers
+  final _agencyFeeController = TextEditingController();
+  final _extraHoursController = TextEditingController();
+  final _taxController = TextEditingController();
+  final _callTimeController = TextEditingController();
+  final _contractController = TextEditingController();
   
   // Form State
   DateTime _selectedDate = DateTime.now();
@@ -55,13 +61,12 @@ class _NewEventPageState extends State<NewEventPage> {
   PaymentStatus _selectedPaymentStatus = PaymentStatus.unpaid;
   final OptionStatus _selectedOptionStatus = OptionStatus.pending;
   String? _selectedAgentId;
-  List<Agent> _agents = [];
   final List<PlatformFile> _selectedFiles = [];
   bool _isLoading = false;
-  bool _isLoadingAgents = true;
   bool _isDateRange = false;
   bool _isPaid = false;
   bool _hasPocketMoney = false;
+  TimeOfDay? _callTime;
   String? _error;
 
   // Job Types for casting/test
@@ -99,7 +104,6 @@ class _NewEventPageState extends State<NewEventPage> {
   @override
   void initState() {
     super.initState();
-    _loadAgents();
 
     // Ensure initial values are valid
     if (!_currencies.contains(_selectedCurrency)) {
@@ -125,27 +129,15 @@ class _NewEventPageState extends State<NewEventPage> {
     _hotelCostController.dispose();
     _pocketMoneyController.dispose();
     _industryContactController.dispose();
+    _agencyFeeController.dispose();
+    _extraHoursController.dispose();
+    _taxController.dispose();
+    _callTimeController.dispose();
+    _contractController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadAgents() async {
-    try {
-      final agents = await AgentsService().getAgents();
-      if (mounted) {
-        setState(() {
-          _agents = agents;
-          _isLoadingAgents = false;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error loading agents: $e');
-      if (mounted) {
-        setState(() {
-          _isLoadingAgents = false;
-        });
-      }
-    }
-  }
+
 
   String _formatTimeOfDay(TimeOfDay? time) {
     if (time == null) return '';
@@ -290,11 +282,17 @@ class _NewEventPageState extends State<NewEventPage> {
       case EventType.directOption:
         data['option_type'] = _isCustomOptionType ? _customTypeController.text : _selectedOptionType;
         data['option_status'] = _selectedOptionStatus.toString().split('.').last;
+        data['agency_fee'] = double.tryParse(_agencyFeeController.text);
+        data['call_time'] = _formatTimeOfDay(_callTime);
         break;
 
       case EventType.job:
       case EventType.directBooking:
         data['job_type'] = _isCustomJobType ? _customTypeController.text : _selectedJobType;
+        data['agency_fee'] = double.tryParse(_agencyFeeController.text);
+        data['extra_hours'] = double.tryParse(_extraHoursController.text);
+        data['tax_percentage'] = double.tryParse(_taxController.text);
+        data['call_time'] = _formatTimeOfDay(_callTime);
         break;
 
       case EventType.casting:
@@ -305,11 +303,13 @@ class _NewEventPageState extends State<NewEventPage> {
         data['photographer_name'] = _photographerController.text;
         data['test_type'] = _selectedTestType;
         data['is_paid'] = _isPaid;
+        data['call_time'] = _formatTimeOfDay(_callTime);
         break;
         
       case EventType.polaroids:
         data['polaroid_type'] = _selectedPolaroidType;
         data['is_paid'] = _isPaid;
+        data['call_time'] = _formatTimeOfDay(_callTime);
         break;
         
       case EventType.meeting:
@@ -325,6 +325,7 @@ class _NewEventPageState extends State<NewEventPage> {
         data['hotel_cost'] = double.tryParse(_hotelCostController.text);
         data['has_pocket_money'] = _hasPocketMoney;
         data['pocket_money_cost'] = double.tryParse(_pocketMoneyController.text);
+        data['contract'] = _contractController.text;
         break;
         
       case EventType.other:
@@ -563,6 +564,43 @@ class _NewEventPageState extends State<NewEventPage> {
         ),
         const SizedBox(height: 16),
       ],
+      // Agency Fee field
+      const SizedBox(height: 16),
+      TextFormField(
+        controller: _agencyFeeController,
+        decoration: const InputDecoration(
+          labelText: 'Agency Fee (%)',
+          border: OutlineInputBorder(),
+        ),
+        keyboardType: TextInputType.number,
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+        ],
+      ),
+      // Call Time field
+      const SizedBox(height: 16),
+      TextFormField(
+        decoration: const InputDecoration(
+          labelText: 'Call Time',
+          border: OutlineInputBorder(),
+          suffixIcon: Icon(Icons.access_time),
+        ),
+        readOnly: true,
+        controller: TextEditingController(
+          text: _callTime != null ? _formatTimeOfDay(_callTime) : '',
+        ),
+        onTap: () async {
+          final time = await showTimePicker(
+            context: context,
+            initialTime: _callTime ?? TimeOfDay.now(),
+          );
+          if (time != null) {
+            setState(() {
+              _callTime = time;
+            });
+          }
+        },
+      ),
     ];
   }
 
@@ -607,6 +645,82 @@ class _NewEventPageState extends State<NewEventPage> {
         ),
         const SizedBox(height: 16),
       ],
+      // Financial fields in responsive row
+      const SizedBox(height: 16),
+      Row(
+        children: [
+          Expanded(
+            child: TextFormField(
+              controller: _agencyFeeController,
+              decoration: const InputDecoration(
+                labelText: 'Agency Fee (%)',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: TextFormField(
+              controller: _extraHoursController,
+              decoration: const InputDecoration(
+                labelText: 'Extra Hours',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+              ],
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 16),
+      Row(
+        children: [
+          Expanded(
+            child: TextFormField(
+              controller: _taxController,
+              decoration: const InputDecoration(
+                labelText: 'Tax (%)',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: TextFormField(
+              decoration: const InputDecoration(
+                labelText: 'Call Time',
+                border: OutlineInputBorder(),
+                suffixIcon: Icon(Icons.access_time),
+              ),
+              readOnly: true,
+              controller: TextEditingController(
+                text: _callTime != null ? _formatTimeOfDay(_callTime) : '',
+              ),
+              onTap: () async {
+                final time = await showTimePicker(
+                  context: context,
+                  initialTime: _callTime ?? TimeOfDay.now(),
+                );
+                if (time != null) {
+                  setState(() {
+                    _callTime = time;
+                  });
+                }
+              },
+            ),
+          ),
+        ],
+      ),
     ];
   }
 
@@ -754,49 +868,22 @@ class _NewEventPageState extends State<NewEventPage> {
   List<Widget> _buildAgentField() {
     return [
       const SizedBox(height: 16),
-      // Use the _agents list and _isLoadingAgents field
-      _isLoadingAgents
-          ? const Center(
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: CircularProgressIndicator(),
-              ),
-            )
-          : _agents.isNotEmpty
-              ? SafeDropdown(
-                  value: _selectedAgentId,
-                  items: _agents.map((agent) => agent.id ?? '').where((id) => id.isNotEmpty).toList(),
-                  labelText: 'Agent *',
-                  hintText: 'Select an agent',
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedAgentId = value;
-                    });
-                  },
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please select an agent';
-                    }
-                    return null;
-                  },
-                )
-              : TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Agent *',
-                    hintText: 'Enter agent name or ID',
-                    border: OutlineInputBorder(),
-                  ),
-                  initialValue: _selectedAgentId,
-                  onChanged: (value) {
-                    _selectedAgentId = value.isEmpty ? null : value;
-                  },
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Please enter an agent';
-                    }
-                    return null;
-                  },
-                ),
+      AgentDropdown(
+        selectedAgentId: _selectedAgentId,
+        labelText: 'Agent *',
+        hintText: 'Select an agent',
+        onChanged: (value) {
+          setState(() {
+            _selectedAgentId = value;
+          });
+        },
+        validator: (value) {
+          if (value == null || value.trim().isEmpty) {
+            return 'Please select an agent';
+          }
+          return null;
+        },
+      ),
     ];
   }
 
@@ -1085,6 +1172,30 @@ class _NewEventPageState extends State<NewEventPage> {
           ],
         ],
       ),
+      // Call Time field
+      const SizedBox(height: 16),
+      TextFormField(
+        decoration: const InputDecoration(
+          labelText: 'Call Time',
+          border: OutlineInputBorder(),
+          suffixIcon: Icon(Icons.access_time),
+        ),
+        readOnly: true,
+        controller: TextEditingController(
+          text: _callTime != null ? _formatTimeOfDay(_callTime) : '',
+        ),
+        onTap: () async {
+          final time = await showTimePicker(
+            context: context,
+            initialTime: _callTime ?? TimeOfDay.now(),
+          );
+          if (time != null) {
+            setState(() {
+              _callTime = time;
+            });
+          }
+        },
+      ),
     ];
   }
 
@@ -1123,6 +1234,30 @@ class _NewEventPageState extends State<NewEventPage> {
             ),
           ],
         ],
+      ),
+      // Call Time field
+      const SizedBox(height: 16),
+      TextFormField(
+        decoration: const InputDecoration(
+          labelText: 'Call Time',
+          border: OutlineInputBorder(),
+          suffixIcon: Icon(Icons.access_time),
+        ),
+        readOnly: true,
+        controller: TextEditingController(
+          text: _callTime != null ? _formatTimeOfDay(_callTime) : '',
+        ),
+        onTap: () async {
+          final time = await showTimePicker(
+            context: context,
+            initialTime: _callTime ?? TimeOfDay.now(),
+          );
+          if (time != null) {
+            setState(() {
+              _callTime = time;
+            });
+          }
+        },
       ),
     ];
   }
@@ -1215,6 +1350,11 @@ class _NewEventPageState extends State<NewEventPage> {
             ),
           ),
         ],
+      ),
+      const SizedBox(height: 16),
+      ui.Input(
+        controller: _contractController,
+        placeholder: 'Contract details',
       ),
       const SizedBox(height: 16),
       CheckboxListTile(

@@ -185,7 +185,7 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
       }
 
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
@@ -398,7 +398,8 @@ class _NewAgencyPageState extends State<NewAgencyPage> {
                           onTap: () async {
                             final date = await showDatePicker(
                               context: context,
-                              initialDate: _contractExpired ?? DateTime.now().add(const Duration(days: 365)),
+                              initialDate: _contractExpired ??
+                                  DateTime.now().add(const Duration(days: 365)),
                               firstDate: DateTime.now(),
                               lastDate: DateTime(2100),
                             );

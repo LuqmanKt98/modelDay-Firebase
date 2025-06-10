@@ -130,8 +130,8 @@ class _AppLayoutState extends State<AppLayout> {
                   child: SafeArea(
                     child: Column(
                       children: [
-                        // Desktop header with title and actions
-                        if (isDesktop)
+                        // Desktop header with title and actions (hide for welcome page)
+                        if (isDesktop && widget.currentPage != '/welcome')
                           Container(
                             padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
                             child: Row(

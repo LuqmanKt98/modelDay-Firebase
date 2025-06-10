@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:new_flutter/widgets/app_layout.dart';
 import 'package:new_flutter/widgets/ui/input.dart' as ui;
 import 'package:new_flutter/widgets/ui/button.dart';
+import 'package:new_flutter/widgets/ui/agent_dropdown.dart';
 import 'package:new_flutter/theme/app_theme.dart';
 
 import 'package:new_flutter/services/direct_options_service.dart';
@@ -35,6 +36,7 @@ class _NewDirectOptionPageState extends State<NewDirectOptionPage> {
   DateTime _selectedDate = DateTime.now();
   TimeOfDay? _startTime;
   TimeOfDay? _endTime;
+  String? _selectedAgentId;
   bool _isCustomType = false;
   bool _isLoading = false;
   bool _isEditing = false;
@@ -106,6 +108,7 @@ class _NewDirectOptionPageState extends State<NewDirectOptionPage> {
       _rateController.text = data['rate'] ?? '';
       _selectedCurrency = data['currency'] ?? 'USD';
       _notesController.text = data['notes'] ?? '';
+      _selectedAgentId = data['bookingAgent'];
       if (data['jobType'] != null && data['jobType'].isNotEmpty) {
         if (_optionTypes.contains(data['jobType'])) {
           _selectedOptionType = data['jobType'];
@@ -144,6 +147,7 @@ class _NewDirectOptionPageState extends State<NewDirectOptionPage> {
           _taxController.text = option.taxPercentage ?? '';
           _additionalFeesController.text = option.additionalFees ?? '';
           _extraHoursController.text = option.extraHours ?? '';
+          _selectedAgentId = option.bookingAgent;
 
           // Parse time strings
           if (option.time != null && option.time!.isNotEmpty) {
@@ -295,6 +299,7 @@ class _NewDirectOptionPageState extends State<NewDirectOptionPage> {
         'time': _formatTime(_startTime),
         'end_time': _formatTime(_endTime),
         'location': _locationController.text,
+        'booking_agent': _selectedAgentId,
         'status': _selectedStatus,
         'payment_status': _selectedPaymentStatus,
         'currency': _selectedCurrency,
@@ -374,6 +379,17 @@ class _NewDirectOptionPageState extends State<NewDirectOptionPage> {
                   ui.Input(
                     label: 'Location',
                     controller: _locationController,
+                  ),
+                  const SizedBox(height: 16),
+                  AgentDropdown(
+                    selectedAgentId: _selectedAgentId,
+                    labelText: 'Booking Agent',
+                    hintText: 'Select an agent',
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedAgentId = value;
+                      });
+                    },
                   ),
                 ],
               ),
@@ -467,28 +483,40 @@ class _NewDirectOptionPageState extends State<NewDirectOptionPage> {
   }
 
   Widget _buildSectionCard(String title, List<Widget> children) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF2E2E2E)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Adjust padding based on available width
+        final isSmallScreen = constraints.maxWidth < 400;
+        final padding = isSmallScreen ? 12.0 : 20.0;
+
+        return Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(padding),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E1E1E),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF2E2E2E)),
           ),
-          const SizedBox(height: 16),
-          ...children,
-        ],
-      ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: isSmallScreen ? 16 : 18,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+              ),
+              const SizedBox(height: 16),
+              ...children,
+            ],
+          ),
+        );
+      },
     );
   }
 

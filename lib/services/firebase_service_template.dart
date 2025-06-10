@@ -20,13 +20,16 @@ class FirebaseServiceTemplate {
   }
 
   /// Get documents from a collection
-  static Future<List<Map<String, dynamic>>> getDocuments(String collectionName) async {
+  static Future<List<Map<String, dynamic>>> getDocuments(
+      String collectionName) async {
     try {
       final snapshot = await getCollection(collectionName).get();
-      return snapshot.docs.map((doc) => {
-        'id': doc.id,
-        ...doc.data() as Map<String, dynamic>,
-      }).toList();
+      return snapshot.docs
+          .map((doc) => {
+                'id': doc.id,
+                ...doc.data() as Map<String, dynamic>,
+              })
+          .toList();
     } catch (e) {
       debugPrint('Error getting documents from $collectionName: $e');
       return [];
@@ -34,13 +37,15 @@ class FirebaseServiceTemplate {
   }
 
   /// Get a single document by ID
-  static Future<Map<String, dynamic>?> getDocument(String collectionName, String id) async {
+  static Future<Map<String, dynamic>?> getDocument(
+      String collectionName, String id) async {
     try {
       final doc = await getCollection(collectionName).doc(id).get();
       if (doc.exists) {
+        final docData = doc.data() as Map<String, dynamic>;
         return {
-          'id': doc.id,
-          ...doc.data() as Map<String, dynamic>,
+          ...docData,
+          'id': doc.id, // Ensure document ID overrides any existing id field
         };
       }
       return null;
@@ -51,7 +56,8 @@ class FirebaseServiceTemplate {
   }
 
   /// Create a new document
-  static Future<String?> createDocument(String collectionName, Map<String, dynamic> data) async {
+  static Future<String?> createDocument(
+      String collectionName, Map<String, dynamic> data) async {
     try {
       if (!isAuthenticated) {
         throw Exception('User not authenticated');
@@ -73,7 +79,8 @@ class FirebaseServiceTemplate {
   }
 
   /// Update a document
-  static Future<bool> updateDocument(String collectionName, String id, Map<String, dynamic> data) async {
+  static Future<bool> updateDocument(
+      String collectionName, String id, Map<String, dynamic> data) async {
     try {
       final updateData = {
         ...data,
@@ -91,7 +98,33 @@ class FirebaseServiceTemplate {
   /// Delete a document
   static Future<bool> deleteDocument(String collectionName, String id) async {
     try {
+      if (!isAuthenticated) {
+        debugPrint('Error: User not authenticated for delete operation');
+        return false;
+      }
+
+      if (id.isEmpty) {
+        debugPrint('Error: Document ID is empty for delete operation');
+        return false;
+      }
+
+      // Check if document exists before deleting
+      final doc = await getCollection(collectionName).doc(id).get();
+      if (!doc.exists) {
+        debugPrint('Error: Document $id does not exist in $collectionName');
+        return false;
+      }
+
+      // Verify the document belongs to the current user
+      final data = doc.data() as Map<String, dynamic>?;
+      if (data?['userId'] != currentUserId) {
+        debugPrint(
+            'Error: User does not have permission to delete document $id');
+        return false;
+      }
+
       await getCollection(collectionName).doc(id).delete();
+      debugPrint('Successfully deleted document $id from $collectionName');
       return true;
     } catch (e) {
       debugPrint('Error deleting document $id from $collectionName: $e');
@@ -101,33 +134,31 @@ class FirebaseServiceTemplate {
 
   /// Get documents by date range
   static Future<List<Map<String, dynamic>>> getDocumentsByDateRange(
-    String collectionName,
-    DateTime startDate,
-    DateTime endDate,
-    {String dateField = 'createdAt'}
-  ) async {
+      String collectionName, DateTime startDate, DateTime endDate,
+      {String dateField = 'createdAt'}) async {
     try {
       final snapshot = await getCollection(collectionName)
-          .where(dateField, isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .where(dateField,
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
           .where(dateField, isLessThanOrEqualTo: Timestamp.fromDate(endDate))
           .get();
 
-      return snapshot.docs.map((doc) => {
-        'id': doc.id,
-        ...doc.data() as Map<String, dynamic>,
-      }).toList();
+      return snapshot.docs
+          .map((doc) => {
+                'id': doc.id,
+                ...doc.data() as Map<String, dynamic>,
+              })
+          .toList();
     } catch (e) {
-      debugPrint('Error getting documents by date range from $collectionName: $e');
+      debugPrint(
+          'Error getting documents by date range from $collectionName: $e');
       return [];
     }
   }
 
   /// Search documents by text
   static Future<List<Map<String, dynamic>>> searchDocuments(
-    String collectionName,
-    String searchField,
-    String query
-  ) async {
+      String collectionName, String searchField, String query) async {
     try {
       // Note: Firestore doesn't have full-text search built-in
       // This is a simple prefix search
@@ -136,10 +167,12 @@ class FirebaseServiceTemplate {
           .where(searchField, isLessThan: '${query}z')
           .get();
 
-      return snapshot.docs.map((doc) => {
-        'id': doc.id,
-        ...doc.data() as Map<String, dynamic>,
-      }).toList();
+      return snapshot.docs
+          .map((doc) => {
+                'id': doc.id,
+                ...doc.data() as Map<String, dynamic>,
+              })
+          .toList();
     } catch (e) {
       debugPrint('Error searching documents in $collectionName: $e');
       return [];
@@ -147,7 +180,8 @@ class FirebaseServiceTemplate {
   }
 
   /// Get user's documents
-  static Future<List<Map<String, dynamic>>> getUserDocuments(String collectionName) async {
+  static Future<List<Map<String, dynamic>>> getUserDocuments(
+      String collectionName) async {
     try {
       if (!isAuthenticated) {
         return [];
@@ -157,10 +191,16 @@ class FirebaseServiceTemplate {
           .where('userId', isEqualTo: currentUserId)
           .get();
 
-      return snapshot.docs.map((doc) => {
-        'id': doc.id,
-        ...doc.data() as Map<String, dynamic>,
+      final results = snapshot.docs.map((doc) {
+        final docData = doc.data() as Map<String, dynamic>;
+        final data = {
+          ...docData,
+          'id': doc.id, // Ensure document ID overrides any existing id field
+        };
+        return data;
       }).toList();
+
+      return results;
     } catch (e) {
       debugPrint('Error getting user documents from $collectionName: $e');
       return [];

@@ -53,9 +53,9 @@ class _NewCastingPageState extends State<NewCastingPage> {
 
   void _populateForm(Casting casting) {
     _titleController.text = casting.title;
-    _descriptionController.text = casting.description;
-    _locationController.text = casting.location;
-    _requirementsController.text = casting.requirements;
+    _descriptionController.text = casting.description ?? '';
+    _locationController.text = casting.location ?? '';
+    _requirementsController.text = casting.requirements ?? '';
     _rateController.text = casting.rate?.toString() ?? '';
     setState(() {
       _currency = casting.currency ?? 'USD';
