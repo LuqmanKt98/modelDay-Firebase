@@ -1,16 +1,37 @@
-# new_flutter
+# Model Day - Professional Modeling Career Manager 📱
 
-A new Flutter project.
+A comprehensive Flutter application designed specifically for models to manage their careers, bookings, and professional activities.
 
-## Getting Started
+## 🌟 Features
 
-This project is a starting point for a Flutter application.
+- **📅 Calendar Management** - Track castings, shoots, and appointments
+- **💼 Job Tracking** - Log modeling jobs, earnings, and client details
+- **👥 Agent Directory** - Manage agent contacts and relationships
+- **📊 Portfolio Builder** - Digital portfolio management
+- **🔐 Secure Authentication** - Firebase-powered user management
+- **📱 Responsive Design** - Works seamlessly on all devices
+- **🎯 Quick Navigation** - Beautiful dashboard with easy access to all features
 
-A few resources to get you started if this is your first Flutter project:
+## 🚀 Technology Stack
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+- **Frontend**: Flutter (Web, iOS, Android)
+- **Backend**: Firebase (Auth, Firestore, Storage)
+- **State Management**: Provider
+- **UI/UX**: Custom responsive design with animations
+- **Deployment**: Vercel (Web), Firebase Hosting
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 🎯 Latest Updates (v2.0)
+
+✅ Fixed overflow issues and improved responsive design
+✅ Enhanced navigation with automatic redirection after signup
+✅ Improved Welcome page with Quick Navigation cards
+✅ Better mobile experience across all screen sizes
+✅ Firebase integration for secure data management
+
+## 🔗 Live Demo
+
+**Web App**: [Model Day on Vercel](https://your-vercel-url.vercel.app)
+
+---
+
+*Built with ❤️ for the modeling community*
